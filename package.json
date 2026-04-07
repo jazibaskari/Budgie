@@ -1,0 +1,9 @@
+{
+    "name": "budgie",
+    "private": true,
+    "workspaces": [
+      "client",
+      "server",
+      "shared"
+    ]
+  }
