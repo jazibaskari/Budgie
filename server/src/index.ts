@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import transactionRoutes from './routes/transactions.js';
 
 dotenv.config(); 
 
@@ -21,6 +22,7 @@ app.use(session({
 configurePassport();
 app.use(passport.initialize());
 app.use(passport.session());
+app.use('/api/transactions', transactionRoutes);
 
 app.get('/', (req, res) => {
   res.send('🐦 Budgie Backend is chirping!');
@@ -35,7 +37,7 @@ app.get('/api/auth/google',
 app.get('/api/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: '/' }),
   (req, res) => {
-    res.send('✅ Login Successful! Your Google account is linked.');
+    res.send('Login Successful! Your Google account is linked.');
   }
 );
 
@@ -44,11 +46,11 @@ const startServer = async () => {
   try {
     await initDatabase();
     app.listen(PORT, () => {
-      console.log(`🚀 Server flying on http://localhost:${PORT}`);
-      console.log(`🔗 Test Link: http://localhost:${PORT}/api/auth/google`);
+      console.log(`Server flying on http://localhost:${PORT}`);
+      console.log(`Test Link: http://localhost:${PORT}/api/auth/google`);
     });
   } catch (err) {
-    console.error("❌ Failed to launch the nest:", err);
+    console.error("Failed to launch the nest:", err);
     process.exit(1);
   }
 };
