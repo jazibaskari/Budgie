@@ -4,68 +4,75 @@ import { upload } from '../middleware/upload.js';
 import { parseTransactionsWithAI } from '../services/geminiService.js';
 import { client } from '../config/cosmos.js';
 import * as xlsx from 'xlsx';
-import { v4 as uuidv4 } from 'uuid';
 import { createRequire } from 'module';
+import crypto from 'crypto';
 
 const require = createRequire(import.meta.url);
 const pdf = require('pdf-parse');
-const container = client.database("BudgieDB").container("Transactions");
 
 const router = Router();
-
-router.get('/', async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
-
-  try {
-    const user = req.user as { id: string };
-    const querySpec = {
-      query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.date DESC",
-      parameters: [{ name: "@userId", value: user.id }]
-    };
-    const { resources: items } = await container.items.query(querySpec).fetchAll();
-    res.json(items);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch" });
-  }
-});
+const container = client.database("BudgieDB").container("Transactions");
 
 router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file' });
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
     let rawText = "";
-    if (req.file.mimetype.includes('spreadsheet') || req.file.mimetype.includes('csv')) {
+    const mime = req.file.mimetype;
+
+    if (mime.includes('spreadsheet') || mime.includes('csv') || mime.includes('excel')) {
       const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
+      
       const sheetName = workbook.SheetNames[0];
-      const worksheet = sheetName ? workbook.Sheets[sheetName] : null;
-      if (!worksheet) throw new Error("Invalid spreadsheet");
+      if (!sheetName) {
+        throw new Error("The Excel file appears to be empty (no sheets found).");
+      }
+
+      const worksheet = workbook.Sheets[sheetName];
+      if (!worksheet) {
+        throw new Error(`Could not read the worksheet named: ${sheetName}`);
+      }
+
+
       rawText = xlsx.utils.sheet_to_csv(worksheet);
-    } else if (req.file.mimetype === 'application/pdf') {
+      
+    } 
+
+    else if (mime === 'application/pdf') {
       const data = await pdf(req.file.buffer);
       rawText = data.text;
+    } 
+
+    else {
+      rawText = req.file.buffer.toString('utf-8');
     }
 
     const transactions = await parseTransactionsWithAI(rawText);
     res.json({ transactions });
+
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    console.error("🔥 Upload Error:", err.message);
+    res.status(500).json({ error: err.message || "Failed to process file" });
   }
 });
 
-// 3. Confirm and Save
 router.post('/confirm', async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+  const user = req.user as any;
+  if (!req.isAuthenticated() || !user?.id) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
 
   try {
-    const { transactions } = req.body;
-    const user = req.user as { id: string };
+    const { transactions, month } = req.body;
+    const currentMonth = month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
     
     const savePromises = transactions.map((t: any) => 
       container.items.create({
-        id: uuidv4(),
-        userId: user.id,
+        id: crypto.randomUUID(),
+        userId: String(user.id), 
+        month: currentMonth,
         ...t,
         isVerified: true,
         createdAt: new Date().toISOString()
@@ -74,8 +81,34 @@ router.post('/confirm', async (req: Request, res: Response) => {
 
     await Promise.all(savePromises);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: "Save failed" });
+
+  } catch (err: any) {
+    console.error("🔥 Confirm Error:", err.message);
+    res.status(500).json({ error: "Failed to save transactions to database" });
+  }
+});
+
+router.get('/', async (req: Request, res: Response) => {
+  const user = req.user as any;
+  if (!req.isAuthenticated() || !user?.id) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+
+    const querySpec = {
+      query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.date DESC",
+      parameters: [{ name: "@userId", value: String(user.id) }]
+    };
+    
+    const { resources: items } = await container.items.query(querySpec).fetchAll();
+    
+
+    res.json(items || []);
+
+  } catch (err: any) {
+    console.error("Fetch Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch transactions" });
   }
 });
 

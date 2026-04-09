@@ -3,13 +3,15 @@ import dotenv from 'dotenv';
 import cors from 'cors'; 
 import session from 'express-session';
 import passport from 'passport';
-import transactionRoutes from './routes/transactions.js';
 import { initDatabase } from './config/cosmos.js';
 import { configurePassport } from './config/passport.js';
+import userRoutes from './routes/user.js';
+import transactionRoutes from './routes/transactions.js';
 
 dotenv.config(); 
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
 app.use(cors({
   origin: 'http://localhost:5174', 
@@ -21,7 +23,6 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = process.env.PORT || 5000;
 
 app.use(session({
   secret: 'budgie_bird_secret', 
@@ -35,28 +36,23 @@ app.use(session({
   }
 }));
 
-
 configurePassport();
 app.use(passport.initialize());
 app.use(passport.session());
 
+
+app.use('/api/user', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 
-app.get('/', (req, res) => {
-  res.send('Budgie Backend is chirping!');
-});
+app.get('/', (req, res) => res.send('Budgie Backend is chirping!'));
 
-// Google auth trigger 
 app.get('/api/auth/google', 
   passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
-// Google callback  
 app.get('/api/auth/google/callback', 
   passport.authenticate('google', { failureRedirect: 'http://localhost:5174' }),
-  (req, res) => {
-    res.redirect('http://localhost:5174');
-  }
+  (req, res) => res.redirect('http://localhost:5174')
 );
 
 app.get('/api/auth/logout', (req, res, next) => {
@@ -67,7 +63,6 @@ app.get('/api/auth/logout', (req, res, next) => {
 });
 
 const startServer = async () => {
-  console.log("🎬 Starting Budgie Server...");
   try {
     await initDatabase();
     app.listen(PORT, () => {
