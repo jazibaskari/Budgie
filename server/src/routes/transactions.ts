@@ -9,9 +9,35 @@ import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 const pdf = require('pdf-parse');
+const container = client.database("BudgieDB").container("Transactions");
 
 const router = Router();
 
+router.get('/', async (req: Request, res: Response) => {
+    try {
+      const userId = (req.user as any)?.id;
+  
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+  
+      const querySpec = {
+        query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.date DESC",
+        parameters: [
+          { name: "@userId", value: userId }
+        ]
+      };
+  
+      const { resources: items } = await container.items
+        .query(querySpec)
+        .fetchAll();
+  
+      res.json(items);
+    } catch (err: any) {
+      console.error("Cosmos Retrieval Error:", err);
+      res.status(500).json({ error: "Failed to fetch transactions from database" });
+    }
+  });
 
 router.post('/upload', upload.single('statement'), async (req: Request, res: Response) => {
   try {
