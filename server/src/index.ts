@@ -43,7 +43,7 @@ app.use(passport.session());
 app.use('/api/transactions', transactionRoutes);
 
 app.get('/', (req, res) => {
-  res.send('🐦 Budgie Backend is chirping!');
+  res.send('Budgie Backend is chirping!');
 });
 
 // Google auth trigger 
