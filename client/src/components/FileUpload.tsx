@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import api from '../api/axiosConfig';
-import { Upload, Loader2 } from 'lucide-react';
+import api from '../api/axiosConfig'; 
+import { Upload } from 'lucide-react';
 
 interface DraftTransaction {
   date: string;
@@ -10,48 +10,72 @@ interface DraftTransaction {
   category: string;
 }
 
+
 interface FileUploadProps {
   onUploadSuccess: (data: DraftTransaction[]) => void;
 }
 
-export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
+const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.[0]) return;
-    
-    setIsUploading(true);
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
     const formData = new FormData();
-    formData.append('file', e.target.files[0]);
+    formData.append('file', file);
 
     try {
-      const res = await api.post('/api/transactions/upload', formData);
+   
+      const response = await api.post('/transactions/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
 
-      onUploadSuccess(res.data.transactions as DraftTransaction[]);
+      if (response.data.transactions) {
+        onUploadSuccess(response.data.transactions);
+      }
     } catch (err) {
-      console.error("Upload Error:", err); 
-      alert("Error parsing CSV. Ensure it has Date, Description, and Amount columns.");
+      console.error('Upload Error:', err);
+      setError(err.response?.data?.error || 'Upload failed. Check server connection.');
     } finally {
-      setIsUploading(false);
-      e.target.value = '';
+      setUploading(false);
     }
   };
 
+
   return (
-    <label className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold cursor-pointer transition-all shadow-sm ${
-      isUploading 
-        ? 'bg-slate-100 text-slate-400' 
-        : 'bg-white border border-[var(--border)] text-slate-700 hover:bg-slate-50'
-    }`}>
-      {isUploading ? <Loader2 className="animate-spin" size={18} /> : <Upload size={18} />}
-      {isUploading ? 'AI Processing...' : 'Upload CSV'}
+    <div className="relative">
       <input 
         type="file" 
-        className="hidden" 
+        id="file-upload"
+        className="hidden"
+        accept=".csv,.xlsx,.xls,.pdf" 
         onChange={handleFileChange} 
-        accept=".csv" 
-        disabled={isUploading} 
+        disabled={uploading}
       />
-    </label>
+      <label 
+        htmlFor="file-upload" 
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer
+          ${uploading 
+            ? 'bg-emerald-500/10 text-emerald-500 animate-pulse' 
+            : 'bg-emerald-500 text-black hover:bg-emerald-400 active:scale-95'
+          }`}
+      >
+        <Upload size={16} />
+        {uploading ? 'AI ANALYSING...' : 'UPLOAD STATEMENT'}
+      </label>
+
+      {error && (
+        <div className="absolute top-full mt-2 right-0 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] px-3 py-1 rounded-md whitespace-nowrap">
+          {error}
+        </div>
+      )}
+    </div>
   );
-}
+};
+
+export default FileUpload;

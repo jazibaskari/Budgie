@@ -1,5 +1,6 @@
+import React, { useState } from 'react';
 import api from '../api/axiosConfig';
-import { Check, X, AlertCircle } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface DraftTransaction {
   date: string;
@@ -9,60 +10,77 @@ interface DraftTransaction {
   category: string;
 }
 
-interface Props {
+interface ReviewModalProps {
   drafts: DraftTransaction[];
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export default function ReviewModal({ drafts, onClose, onSuccess }: Props) {
-    const handleConfirm = async () => {
-        try {
-          await api.post('/api/transactions/confirm', { transactions: drafts });
-          onSuccess();
-        } catch (err) {
-          console.error("Confirmation Error:", err);
-          alert("Failed to save transactions. Please try again.");
-        }
-      };
+const ReviewModal: React.FC<ReviewModalProps> = ({ drafts, onClose, onSuccess }) => {
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleConfirm = async () => {
+    setIsSaving(true);
+    setError(null);
+    try {
+
+      await api.post('/transactions/confirm', {
+        transactions: drafts,
+        month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+      });
+      
+      onSuccess();
+    } catch (err) {
+      console.error('Confirmation Error:', err);
+      setError(err.response?.data?.error || 'Failed to save transactions.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-[var(--border)] flex justify-between items-center bg-slate-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+      <div className="bg-[#111] border border-[#222] w-full max-w-4xl max-h-[80vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl">
+        
+        <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
           <div>
-            <h2 className="text-xl font-bold text-[var(--text-h)] flex items-center gap-2">
-              <AlertCircle className="text-[var(--accent)]" /> Review AI Categorization
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <CheckCircle2 className="text-emerald-500" size={20} />
+              Review AI Extraction
             </h2>
-            <p className="text-sm text-[var(--text)]">Gemini has processed your file. Please confirm the details below.</p>
+            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest font-bold">
+              Verify {drafts.length} Transactions
+            </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-[#222] rounded-full text-gray-500 transition-colors">
             <X size={20} />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="text-xs uppercase text-slate-400 font-bold border-b border-[var(--border)]">
-                <th className="pb-3 px-2">Date</th>
-                <th className="pb-3 px-2">Merchant</th>
-                <th className="pb-3 px-2">Category</th>
-                <th className="pb-3 px-2 text-right">Amount</th>
+        <div className="overflow-y-auto flex-1 bg-black">
+          <table className="w-full text-left border-collapse">
+            <thead className="sticky top-0 bg-[#1A1A1A] text-[#666] z-10">
+              <tr>
+                <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Merchant</th>
+                <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Category</th>
+                <th className="p-5 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
-              {drafts.map((d, i) => (
-                <tr key={i} className="border-b border-slate-50 last:border-0 italic">
-                  <td className="py-4 px-2 text-sm">{d.date}</td>
-                  <td className="py-4 px-2 text-sm font-semibold">{d.merchant}</td>
-                  <td className="py-4 px-2">
-                    <span className="bg-[var(--accent-bg)] text-[var(--accent)] px-2 py-1 rounded-md text-xs font-bold border border-[var(--accent-border)]">
-                      {d.category}
+              {drafts.map((t, idx) => (
+                <tr key={idx} className="border-b border-[#111] hover:bg-[#161616]/50 transition-all">
+                  <td className="p-5">
+                    <div className="text-sm font-bold text-white">{t.merchant}</div>
+                    <div className="text-[10px] text-gray-600 font-mono mt-1">{t.date}</div>
+                  </td>
+                  <td className="p-5">
+                    <span className="px-3 py-1 rounded-md bg-[#222] text-emerald-500 text-[11px] font-bold border border-emerald-500/10">
+                      {t.category}
                     </span>
                   </td>
-                  <td className={`py-4 px-2 text-sm text-right font-mono ${d.amount < 0 ? 'text-red-500' : 'text-green-600'}`}>
-                    {d.amount.toFixed(2)}
+                  <td className="p-5 text-right font-mono font-bold text-white">
+                    £{Math.abs(t.amount).toFixed(2)}
                   </td>
                 </tr>
               ))}
@@ -70,15 +88,32 @@ export default function ReviewModal({ drafts, onClose, onSuccess }: Props) {
           </table>
         </div>
 
-        <div className="p-6 border-t border-[var(--border)] bg-slate-50 flex justify-end gap-3">
-          <button onClick={onClose} className="px-6 py-2 rounded-xl font-medium text-slate-600 hover:bg-slate-200 transition-all">
-            Cancel
-          </button>
-          <button onClick={handleConfirm} className="px-6 py-2 rounded-xl font-bold bg-[var(--accent)] text-white shadow-lg hover:brightness-110 flex items-center gap-2 transition-all">
-            <Check size={18} /> Confirm & Save
-          </button>
+        <div className="p-6 border-t border-[#222] bg-[#161616] flex flex-col gap-4">
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 text-xs font-bold mb-2">
+              <AlertCircle size={14} /> {error}
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-4">
+            <button 
+              onClick={onClose}
+              className="px-6 py-3 text-sm font-bold text-gray-400 hover:text-white transition-all"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleConfirm}
+              disabled={isSaving}
+              className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-900 disabled:text-emerald-500 text-black font-black text-sm rounded-xl transition-all flex items-center gap-2"
+            >
+              {isSaving ? 'SAVING TO COSMOS...' : 'CONFIRM & SAVE'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ReviewModal;
