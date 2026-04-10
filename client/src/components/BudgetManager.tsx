@@ -11,37 +11,47 @@ const DEFAULT_CATEGORIES = [
 const BudgetManager: React.FC = () => {
   const { budgets, fetchFinanceData } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
-  const [localBudgets, setLocalBudgets] = useState<Record<string, number>>({});
+  const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>({});
 
   useEffect(() => {
     if (budgets && Object.keys(budgets).length > 0) {
       setLocalBudgets(budgets);
     } else {
-      const initial: Record<string, number> = {};
+      const initial: Record<string, string> = {};
       DEFAULT_CATEGORIES.forEach(cat => {
-        initial[cat] = 0;
+        initial[cat] = ""; 
       });
       setLocalBudgets(initial);
     }
   }, [budgets]);
 
   const handleUpdateBudget = (category: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setLocalBudgets(prev => ({
-      ...prev,
-      [category]: numValue
-    }));
+    if (value === "") {
+      setLocalBudgets(prev => ({ ...prev, [category]: "" }));
+      return;
+    }
+
+    if (/^\d*\.?\d*$/.test(value)) {
+      setLocalBudgets(prev => ({
+        ...prev,
+        [category]: value
+      }));
+    }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      await api.post('/user/update-budgets', { budgets: localBudgets });
+      const sanitizedBudgets = Object.fromEntries(
+        Object.entries(localBudgets).map(([k, v]) => [k, v === "" ? 0 : Number(v)])
+      );
+
+      await api.post('/user/update-budgets', { budgets: sanitizedBudgets });
       await fetchFinanceData();
       alert('Monthly budgets updated successfully!');
     } catch (error) {
       console.error("Budget Save Error:", error);
-      alert(`Error: ${error.response?.status === 404 ? "Route not found." : "Failed to save"}`);
+      alert("Failed to save configuration.");
     } finally {
       setIsSaving(false);
     }
@@ -74,7 +84,6 @@ const BudgetManager: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
-          {/* NEW: Delete Button */}
           <button
             onClick={handleDelete}
             disabled={isSaving}
@@ -104,8 +113,10 @@ const BudgetManager: React.FC = () => {
             <div className="relative">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-mono">£</span>
               <input
-                type="number"
+                type="text" 
+                inputMode="decimal" 
                 value={amount}
+                placeholder="0.00"
                 onChange={(e) => handleUpdateBudget(category, e.target.value)}
                 className="w-full bg-[#0A0A0A] border border-[#333] rounded-xl py-3 pl-8 pr-4 text-white font-mono focus:border-emerald-500 outline-none transition-all"
               />
