@@ -51,6 +51,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2">
             <button onClick={() => scrollTo('home')} className="px-4 py-2 text-xs font-medium text-gray-300 hover:text-white transition-all">Home</button>
             <button onClick={() => scrollTo('budget-config')} className="px-4 py-2 text-xs font-medium text-gray-300 hover:text-white transition-all">Budget Configuration</button>
+            <button onClick={() => scrollTo('transactions')} className="px-4 py-2 text-xs font-medium text-gray-300 hover:text-white transition-all">Transactions</button>
             {!hasBudgetsSet ? (
                <button onClick={() => scrollTo('dashboard-locked')} className="px-4 py-2 text-xs font-medium text-gray-300 hover:text-white transition-all">Metrics</button>
             ) : (
@@ -87,21 +88,11 @@ export default function Dashboard() {
         </section>
 
         {hasBudgetsSet ? (
-          <div id="metrics" className="animate-in fade-in duration-700">
-                <h1 className="text-2xl font-medium">Your Metrics</h1>
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5 flex flex-col gap-4 mb-8">
-                <h2 className="font-regular text-gray-500 text-sm mt-1">Categorised Monthly Budget</h2>
-                <CategoryGrid />
-              </div>
-              <div className="lg:col-span-7 flex flex-col gap-4 mb-8">
-                <h2 className="font-regular text-gray-500 text-sm mt-1">Categorised Monthly Spend</h2>
-                <CategorisedMonthlySpend />
-              </div>
-            </div>
+          <div className="animate-in fade-in duration-700">
+      
 
-            <section className="bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl">
-              <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
+            <section className="bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl mb-8">
+              <div id="transactions" className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
                 <h2 className="text-xl font-medium">This Month's Transactions</h2>
                 <FileUpload onUploadSuccess={(data: DraftTransaction[]) => setDrafts(data)} />
               </div>
@@ -136,7 +127,19 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
+
+              
             </section>
+            <div id="metrics" className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-5 flex flex-col gap-4 mb-8">
+              <h1 className="text-2xl font-medium">Categorised Monthly Budget</h1>
+                <CategoryGrid />
+              </div>
+              <div className="lg:col-span-7 flex flex-col gap-4 mb-8">
+              <h1 className="text-2xl font-medium">Categorised Monthly Spend</h1>
+                <CategorisedMonthlySpend />
+              </div>
+            </div>
           </div>
         ) : (
           <div id="dashboard-locked" className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center">
