@@ -50,7 +50,7 @@ const CategoryGrid: React.FC = () => {
                 </div>
                 <span className="text-sm font-medium text-white">{category}</span>
               </div>
-              <span className={`text-[10px] font-mono ${isOverBudget ? 'text-red-500' : 'text-gray-500'}`}>
+              <span className={`text-[10px] font-medium ${isOverBudget ? 'text-red-500' : 'text-gray-500'}`}>
                 {percent.toFixed(0)}%
               </span>
             </div>

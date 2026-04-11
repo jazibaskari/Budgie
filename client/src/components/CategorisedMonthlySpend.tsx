@@ -41,7 +41,6 @@ const CategorisedMonthlySpend: React.FC = () => {
         <h3 className="text-white text-sm font-medium  opacity-80">
           Categorised Monthly Spend
         </h3>
-        <p className="text-xs text-gray-500 mt-1">Total expenditure vs. Category limits</p>
       </div>
 
       <div className="h-[320px] w-full">

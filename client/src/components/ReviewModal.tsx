@@ -72,14 +72,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ drafts, onClose, onSuccess })
                 <tr key={idx} className="border-b border-[#111] hover:bg-[#161616]/50 transition-all">
                   <td className="p-5">
                     <div className="text-sm font-medium text-white">{t.merchant}</div>
-                    <div className="text-[10px] text-gray-600 font-mono mt-1">{t.date}</div>
+                    <div className="text-[10px] text-gray-600 font-medium mt-1">{t.date}</div>
                   </td>
                   <td className="p-5">
                     <span className="px-3 py-1 rounded-md bg-[#222] text-emerald-500 text-[11px] font-medium border border-emerald-500/10">
                       {t.category}
                     </span>
                   </td>
-                  <td className="p-5 text-right font-mono font-medium text-white">
+                  <td className="p-5 text-right font-medium text-white">
                     £{Math.abs(t.amount).toFixed(2)}
                   </td>
                 </tr>

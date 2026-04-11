@@ -125,7 +125,7 @@ export default function Dashboard() {
                           <td className="p-5 text-sm">
                             <span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] font-medium border border-[#333]">{t.category}</span>
                           </td>
-                          <td className="p-5 text-sm text-right font-mono font-medium text-white">£{Math.abs(t.amount).toFixed(2)}</td>
+                          <td className="p-5 text-sm text-right font-medium font-medium text-white">£{Math.abs(t.amount).toFixed(2)}</td>
                         </tr>
                       ))
                     ) : (
