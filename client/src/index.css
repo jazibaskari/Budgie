@@ -20,12 +20,31 @@
   
   --spacing-xs: 4px;
   --spacing-sm: 8px;
-
+  --color-app-bg: #ffffff;
+  --color-app-text: #000000;
 }
 
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-app-bg: #0A0A0A;
+    --color-app-text: #ffffff;
+  }
+}
 
 body {
+  margin: 0;
   font-family: var(--font-regular);
-  background-color: #0A0A0A;
-  color: white;
+  background-color: var(--color-app-bg);
+  color: var(--color-app-text);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  width: 100%;
+  max-width: 1126px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
