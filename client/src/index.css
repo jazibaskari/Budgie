@@ -40,11 +40,3 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-#root {
-  width: 100%;
-  max-width: 1126px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
