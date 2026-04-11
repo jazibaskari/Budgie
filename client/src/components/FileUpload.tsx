@@ -66,7 +66,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
           }`}
       >
         <Upload size={16} />
-        {uploading ? 'AI ANALYSING...' : 'UPLOAD STATEMENT'}
+        {uploading ? 'AI Aanalysing...' : 'Upload Statement'}
       </label>
 
       {error && (

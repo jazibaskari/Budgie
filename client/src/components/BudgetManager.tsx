@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, PieChart, Trash2, AlertCircle, CheckCircle, X, AlertTriangle } from 'lucide-react';
+import { Save, Trash2, AlertCircle, CheckCircle, X, AlertTriangle } from 'lucide-react';
 import api from '../api/axiosConfig'; 
 import { useFinance } from '../hooks/useFinance';
 
@@ -193,7 +193,6 @@ const BudgetManager: React.FC = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h2 className="text-2xl font-medium text-white flex items-center gap-3">
-            <PieChart className="text-emerald-500" size={24} />
             Budget Configuration
           </h2>
           <p className="font-regular text-gray-500 text-sm mt-1">Set your monthly spending limits.</p>

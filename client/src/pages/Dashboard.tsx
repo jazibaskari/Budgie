@@ -78,6 +78,7 @@ export default function Dashboard() {
               Welcome to Your Finances
             </h1>
             <p className="text-gray-500 mt-1">Managing expenditure for <span className="text-emerald-500 font-medium">{currentMonth}</span></p>
+            <p className="text-gray-500 mt-1">Please start by entering your budget for each category this month. After you're done, simply save the configuration and hit 'Metrics' to track your current month's spending. Check out 'Getting Started' for an in-depth guide. Alternatively, click 'FAQs' for our most commonly asked questions.</p>
           </div>
         </header>
 
@@ -86,14 +87,15 @@ export default function Dashboard() {
         </section>
 
         {hasBudgetsSet ? (
-          <div id="metrics" className="space-y-12 animate-in fade-in duration-700">
+          <div id="metrics" className="animate-in fade-in duration-700">
+                <h1 className="text-2xl font-medium">Your Metrics</h1>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-5 flex flex-col gap-4">
-                <h2 className="text-[10px] font-black tracking-[0.2em] text-gray-500">Categorised Monthly Budget</h2>
+              <div className="lg:col-span-5 flex flex-col gap-4 mb-8">
+                <h2 className="font-regular text-gray-500 text-sm mt-1">Categorised Monthly Budget</h2>
                 <CategoryGrid />
               </div>
-              <div className="lg:col-span-7 flex flex-col gap-4">
-                <h2 className="text-[10px] font-black tracking-[0.2em] text-gray-500">Categorised Monthly Spend</h2>
+              <div className="lg:col-span-7 flex flex-col gap-4 mb-8">
+                <h2 className="font-regular text-gray-500 text-sm mt-1">Categorised Monthly Spend</h2>
                 <CategorisedMonthlySpend />
               </div>
             </div>
