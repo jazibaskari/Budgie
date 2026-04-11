@@ -59,7 +59,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onUploadSuccess }) => {
       />
       <label 
         htmlFor="file-upload" 
-        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer
+        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer
           ${uploading 
             ? 'bg-emerald-500/10 text-emerald-500 animate-pulse' 
             : 'bg-emerald-500 text-black hover:bg-emerald-400 active:scale-95'

@@ -66,11 +66,11 @@ const CategoryGrid: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div className="flex flex-col">
-                <span className="text-gray-500 uppercase font-bold tracking-tighter">Spent</span>
+                <span className="text-gray-500 font-medium er">Spent</span>
                 <span className="text-white font-medium">£{spent.toFixed(2)}</span>
               </div>
               <div className="flex flex-col text-right">
-                <span className="text-gray-500 uppercase font-bold tracking-tighter">
+                <span className="text-gray-500 font-medium er">
                   {isOverBudget ? 'Over' : 'Left'}
                 </span>
                 <span className={`font-medium ${isOverBudget ? 'text-red-400' : 'text-emerald-500'}`}>

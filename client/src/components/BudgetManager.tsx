@@ -12,8 +12,7 @@ const BudgetManager: React.FC = () => {
   const { budgets, fetchFinanceData } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>({});
-  
-  // Alert & Validation State
+
   const [alert, setAlert] = useState<{ type: 'error' | 'success', title: string, message: string } | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -101,8 +100,6 @@ const BudgetManager: React.FC = () => {
 
   return (
     <div className="bg-[#111111] border border-[#222222] rounded-[32px] p-8 shadow-2xl">
-      
-      {/* --- SUCCESS/ERROR ALERT OVERLAY --- */}
       {alert && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
           <div 
@@ -125,7 +122,7 @@ const BudgetManager: React.FC = () => {
                   )}
                 </div>
                 <div className="ml-3">
-                  <h3 className={`text-sm font-bold ${
+                  <h3 className={`text-sm font-medium ${
                     alert.type === 'error' ? 'text-red-800 dark:text-red-200' : 'text-emerald-800 dark:text-emerald-200'
                   }`}>
                     {alert.title}
@@ -133,7 +130,7 @@ const BudgetManager: React.FC = () => {
                   <div className={`mt-2 text-sm ${
                     alert.type === 'error' ? 'text-red-700 dark:text-red-300' : 'text-emerald-700 dark:text-emerald-300'
                   }`}>
-                    <p>{alert.message}</p>
+                    <p className='font-regular'>{alert.message}</p>
                   </div>
                   <div className="mt-4">
                   </div>
@@ -148,8 +145,6 @@ const BudgetManager: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* --- TAILWIND UI RESET CONFIRMATION MODAL --- */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[120] overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -165,9 +160,9 @@ const BudgetManager: React.FC = () => {
                     <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-500" aria-hidden="true" />
                   </div>
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-white">Reset budget configuration</h3>
+                    <h3 className="text-base font-regular leading-6 text-gray-900 dark:text-white">Reset budget configuration</h3>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                      <p className="text-sm font-regular text-gray-500 dark:text-gray-400">
                         Are you sure you want to clear all your monthly budgets? This action cannot be undone and will reset all categories to zero.
                       </p>
                     </div>
@@ -177,14 +172,14 @@ const BudgetManager: React.FC = () => {
               <div className="bg-gray-50 dark:bg-[#111111] px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3">
                 <button
                   type="button"
-                  className="inline-flex w-full justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 sm:w-auto transition-all"
+                  className="inline-flex w-full justify-center rounded-xl bg-red-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-red-500 sm:w-auto transition-all"
                   onClick={confirmDelete}
                 >
                   Reset Budgets
                 </button>
                 <button
                   type="button"
-                  className="mt-3 inline-flex w-full justify-center rounded-xl bg-white dark:bg-transparent px-5 py-2.5 text-sm font-bold text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-[#333] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] sm:mt-0 sm:w-auto transition-all"
+                  className="mt-3 inline-flex w-full justify-center rounded-xl bg-white dark:bg-transparent px-5 py-2.5 text-sm font-medium text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-[#333] hover:bg-gray-50 dark:hover:bg-[#1a1a1a] sm:mt-0 sm:w-auto transition-all"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
@@ -197,18 +192,18 @@ const BudgetManager: React.FC = () => {
 
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+          <h2 className="text-2xl font-medium text-white flex items-center gap-3">
             <PieChart className="text-emerald-500" size={24} />
             Budget Configuration
           </h2>
-          <p className="text-gray-500 text-sm mt-1">Set your monthly spending limits.</p>
+          <p className="font-regular text-gray-500 text-sm mt-1">Set your monthly spending limits.</p>
         </div>
         
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowDeleteModal(true)}
             disabled={isSaving}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-all border border-[#222]"
+            className="flex items-center gap-2 px-5 py-3 rounded-xl font-medium text-sm text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-all border border-[#222]"
           >
             <Trash2 size={18} /> Reset
           </button>
@@ -216,7 +211,7 @@ const BudgetManager: React.FC = () => {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-900/20"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-lg shadow-emerald-900/20"
           >
             <Save size={18} />
             {isSaving ? 'Saving...' : 'Save Configuration'}
@@ -227,18 +222,18 @@ const BudgetManager: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Object.entries(localBudgets).map(([category, amount]) => (
           <div key={category} className="bg-[#181818] border border-[#262626] p-4 rounded-2xl flex flex-col gap-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">
+            <label className="text-sm font-regular text-gray-500">
               {category}
             </label>
             <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-mono">£</span>
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-regular">£</span>
               <input
                 type="text"
                 inputMode="decimal"
                 value={amount}
                 placeholder="0.00"
                 onChange={(e) => handleUpdateBudget(category, e.target.value)}
-                className={`w-full bg-[#0A0A0A] border rounded-xl py-3 pl-8 pr-4 text-white font-mono focus:border-emerald-500 outline-none transition-all
+                className={`w-full bg-[#0A0A0A] border rounded-xl py-3 pl-8 pr-4 text-white font-regular focus:border-emerald-500 outline-none transition-all
                   ${showErrors && amount === "" 
                     ? 'border-red-500/60 ring-1 ring-red-500/20' 
                     : 'border-[#333]'

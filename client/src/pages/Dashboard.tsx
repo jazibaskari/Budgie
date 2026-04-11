@@ -38,20 +38,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-10 font-sans">
+    <div className="min-h-screen bg-[#0A0A0A] text-white p-6 md:p-10 font-medium">
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-[#1A1A1A] pb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+          <h1 className="text-3xl font-medium flex items-center gap-3">
             <LayoutDashboard size={32} className="text-emerald-500" />
             Welcome to Your Finances
           </h1>
-          <p className="text-gray-500 mt-1">Managing expenditure for <span className="text-emerald-500 font-medium">{currentMonth}</span></p>
+          <p className="font-regular text-gray-500 mt-1">Managing expenditure for <span className="text-emerald-500 font-medium">{currentMonth}</span></p>
         </div>
         
         <div className="flex items-center gap-4">
           <button 
             onClick={() => window.location.href = 'http://localhost:5000/api/auth/logout'}
-            className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all border border-[#222]"
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium text-gray-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all border border-[#222]"
           >
             <LogOut size={18} /> Logout
           </button>
@@ -68,19 +68,19 @@ export default function Dashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             <div className="lg:col-span-5 flex flex-col gap-4">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Categorised Monthly Budget</h2>
+              <h2 className="text-[10px] font-black tracking-[0.2em] text-gray-500">Categorised Monthly Budget</h2>
               <CategoryGrid />
             </div>
             
             <div className="lg:col-span-7 flex flex-col gap-4">
-               <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">Categorised Monthly Spend</h2>
+               <h2 className="text-[10px] font-black tracking-[0.2em] text-gray-500">Categorised Monthly Spend</h2>
                <CategorisedMonthlySpend />
             </div>
           </div>
 
           <section className="bg-[#111] border border-[#222] rounded-3xl overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
-              <h2 className="text-xl font-bold">This Month's Transactions</h2>
+              <h2 className="text-xl font-medium">This Month's Transactions</h2>
               <FileUpload onUploadSuccess={(data: DraftTransaction[]) => setDrafts(data)} />
             </div>
             
@@ -88,10 +88,10 @@ export default function Dashboard() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#1A1A1A] text-[#666]">
-                    <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Date</th>
-                    <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Merchant</th>
-                    <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Category</th>
-                    <th className="p-5 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                    <th className="p-5 font-medium text-[10px] ">Date</th>
+                    <th className="p-5 font-medium text-[10px] ">Merchant</th>
+                    <th className="p-5 font-medium text-[10px] ">Category</th>
+                    <th className="p-5 font-medium text-[10px]  text-right">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -101,15 +101,15 @@ export default function Dashboard() {
                         <td className="p-5 text-sm text-gray-500">
                           {new Date(t.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
                         </td>
-                        <td className="p-5 text-sm font-bold text-white">
+                        <td className="p-5 text-sm font-medium text-white">
                           {t.merchant}
                         </td>
                         <td className="p-5 text-sm">
-                          <span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] font-bold border border-[#333]">
+                          <span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] font-medium border border-[#333]">
                             {t.category}
                           </span>
                         </td>
-                        <td className="p-5 text-sm text-right font-mono font-bold text-white">
+                        <td className="p-5 text-sm text-right font-mono font-medium text-white">
                           £{Math.abs(t.amount).toFixed(2)}
                         </td>
                       </tr>
@@ -132,8 +132,8 @@ export default function Dashboard() {
           <div className="p-6 bg-emerald-500/5 rounded-full mb-6">
             <Lock size={48} className="text-emerald-500/20" />
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Dashboard Locked</h3>
-          <p className="text-gray-500 max-w-sm text-sm leading-relaxed">
+          <h3 className="text-xl font-medium text-white mb-2">Dashboard Locked</h3>
+          <p className="text-gray-500 font-regular max-w-md text-sm leading-relaxed">
             Please set your monthly budgets in the configuration section above to unlock your transaction tracking and analytics.
           </p>
         </div>

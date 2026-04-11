@@ -1,45 +1,31 @@
 @import "tailwindcss";
 
-
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #ffffff;
-  --border: #e5e4e7;
-  --accent: #aa3bff;
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+@font-face {
+  font-family: 'Europa Medium';
+  src: url('/fonts/Europa_Grotesk_Medium.otf') format('opentype');
+  font-weight: normal;
+  font-display: swap;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --accent: #c084fc;
-  }
+@font-face {
+  font-family: 'Europa Regular';
+  src: url('/fonts/Europa_Grotesk_Regular.otf') format('opentype');
+  font-weight: normal;
+  font-display: swap;
 }
+
+@theme {
+  --font-medium: "Europa Medium", sans-serif;
+  --font-regular: "Europa Regular", sans-serif;
+  
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+
+}
+
 
 body {
-  margin: 0;
-  font-family: var(--sans);
-  background-color: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-}
-
-#root {
-  width: 100%;
-  max-width: 1126px;
-  margin: 0 auto;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-h1, h2 {
-  font-family: var(--sans);
-  font-weight: 500;
-  color: var(--text-h);
+  font-family: var(--font-regular);
+  background-color: #0A0A0A;
+  color: white;
 }

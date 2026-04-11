@@ -38,7 +38,7 @@ const CategorisedMonthlySpend: React.FC = () => {
   return (
     <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 h-[450px] shadow-xl">
       <div className="flex flex-col mb-6">
-        <h3 className="text-white text-sm font-bold uppercase tracking-widest opacity-80">
+        <h3 className="text-white text-sm font-medium  opacity-80">
           Categorised Monthly Spend
         </h3>
         <p className="text-xs text-gray-500 mt-1">Total expenditure vs. Category limits</p>
@@ -100,11 +100,11 @@ const CategorisedMonthlySpend: React.FC = () => {
       <div className="mt-4 flex items-center justify-center gap-6">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-[#d1d5db] rounded"></div>
-          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Under Budget</span>
+          <span className="text-[10px] text-gray-500 font-medium er">Under Budget</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-[#ef4444] rounded"></div>
-          <span className="text-[10px] text-gray-500 uppercase font-bold tracking-tighter">Over Budget</span>
+          <span className="text-[10px] text-gray-500 font-medium er">Over Budget</span>
         </div>
       </div>
     </div>
