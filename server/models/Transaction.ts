@@ -7,4 +7,6 @@ export interface ITransaction {
     category: string;
     month: string;    
     createdAt: string;
-  }
+    merchant: string; 
+    status: 'pending' | 'verified'; 
+}
