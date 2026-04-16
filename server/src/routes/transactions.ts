@@ -1,115 +1,105 @@
 import { Router } from 'express';
-import type { Request, Response } from 'express';
-import { upload } from '../middleware/upload.js';
-import { parseTransactionsWithAI } from '../services/geminiService.js';
-import { client } from '../config/cosmos.js';
-import * as xlsx from 'xlsx';
-import { createRequire } from 'module';
-import crypto from 'crypto';
-
-const require = createRequire(import.meta.url);
-const pdf = require('pdf-parse');
+import type { Response } from 'express';
+import axios from 'axios';
+import { getValidAccessToken } from '../middleware/monzoAuth.js';
+import { getContainer } from '../config/cosmos.js';
+import type { AuthRequest } from '../middleware/verifyToken.js';
 
 const router = Router();
-const container = client.database("BudgieDB").container("Transactions");
+const userContainer = getContainer("Users");
+const REDIRECT_URI = 'http://localhost:5000/api/auth/monzo/callback';
 
-router.post('/upload', upload.single('file'), async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) return res.status(401).json({ error: "Unauthorized" });
+router.get('/auth', (req: AuthRequest, res: Response) => {
+  const googleId = req.user?.googleId;
+  if (!googleId) return res.status(401).send("Not logged in");
+
+  const state = Buffer.from(googleId).toString('base64');
+  const authUrl = `https://auth.monzo.com/?client_id=${process.env.MONZO_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${state}`;
+  res.redirect(authUrl);
+});
+
+router.get('/auth/monzo/callback', async (req, res) => {
+  const { code, state } = req.query;
+  if (!code || !state) return res.status(400).send("Missing code/state");
+
+  const googleId = Buffer.from(state as string, 'base64').toString('utf8').trim();
 
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    const response = await axios.post('https://api.monzo.com/oauth2/token', new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: process.env.MONZO_CLIENT_ID!,
+      client_secret: process.env.MONZO_CLIENT_SECRET!,
+      redirect_uri: REDIRECT_URI,
+      code: code as string,
+    }).toString());
 
-    let rawText = "";
-    const mime = req.file.mimetype;
+  
+    const { resources } = await userContainer.items.query({
+      query: "SELECT * FROM c WHERE c.googleId = @gid",
+      parameters: [{ name: "@gid", value: googleId }]
+    }).fetchAll();
 
-    if (mime.includes('spreadsheet') || mime.includes('csv') || mime.includes('excel')) {
-      const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
-      
-      const sheetName = workbook.SheetNames[0];
-      if (!sheetName) {
-        throw new Error("The Excel file appears to be empty (no sheets found).");
-      }
-
-      const worksheet = workbook.Sheets[sheetName];
-      if (!worksheet) {
-        throw new Error(`Could not read the worksheet named: ${sheetName}`);
-      }
-
-
-      rawText = xlsx.utils.sheet_to_csv(worksheet);
-      
-    } 
-
-    else if (mime === 'application/pdf') {
-      const data = await pdf(req.file.buffer);
-      rawText = data.text;
-    } 
-
-    else {
-      rawText = req.file.buffer.toString('utf-8');
+    if (resources.length === 0) {
+      console.error("CRITICAL - No document found for googleId:", googleId);
+      return res.status(404).send("User not found.");
     }
 
-    const transactions = await parseTransactionsWithAI(rawText);
-    res.json({ transactions });
+    const user = resources[0];
 
+    await userContainer.item(user.id, user.id).patch([{ 
+      op: "add", 
+      path: "/monzo", 
+      value: { 
+        access_token: response.data.access_token,
+        refresh_token: response.data.refresh_token,
+        expires_at: Date.now() + (response.data.expires_in * 1000)
+      }
+    }]);
+
+    res.send(`
+  <script>
+    window.opener.postMessage("auth_success", "http://localhost:5174");
+    window.close();
+  </script>
+`); 
   } catch (err: any) {
-    console.error("🔥 Upload Error:", err.message);
-    res.status(500).json({ error: err.message || "Failed to process file" });
+    console.error("Auth Callback Error:", err.message);
+    res.status(500).send("Authentication failed");
   }
 });
 
-router.post('/confirm', async (req: Request, res: Response) => {
-  const user = req.user as any;
-  if (!req.isAuthenticated() || !user?.id) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+router.get('/transactions', async (req: AuthRequest, res: Response) => {
+  const googleId = req.user?.googleId;
+  if (!googleId) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    const { transactions, month } = req.body;
-    const currentMonth = month || new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    const token = await getValidAccessToken(googleId);
+    if (!token) return res.status(401).json({ error: "NO_TOKEN" });
+
+    const response = await axios.get('https://api.monzo.com/transactions', {
+      headers: { Authorization: `Bearer ${token}` },
+      params: { 
+        account_id: process.env.MONZO_ACCOUNT_ID, 
+        since: '2026-01-01T00:00:00Z', 
+        limit: 100 
+      }
+    });
     
-    const savePromises = transactions.map((t: any) => 
-      container.items.create({
-        id: crypto.randomUUID(),
-        userId: String(user.id), 
-        month: currentMonth,
-        ...t,
-        isVerified: true,
-        createdAt: new Date().toISOString()
-      })
-    );
-
-    await Promise.all(savePromises);
-    res.json({ success: true });
-
+    res.json(response.data.transactions || []);
   } catch (err: any) {
-    console.error("🔥 Confirm Error:", err.message);
-    res.status(500).json({ error: "Failed to save transactions to database" });
-  }
-});
-
-router.get('/', async (req: Request, res: Response) => {
-  const user = req.user as any;
-  if (!req.isAuthenticated() || !user?.id) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  try {
-
-    const querySpec = {
-      query: "SELECT * FROM c WHERE c.userId = @userId ORDER BY c.date DESC",
-      parameters: [{ name: "@userId", value: String(user.id) }]
-    };
-    
-    const { resources: items } = await container.items.query(querySpec).fetchAll();
-    
-
-    res.json(items || []);
-
-  } catch (err: any) {
-    console.error("Fetch Error:", err.message);
-    res.status(500).json({ error: "Failed to fetch transactions" });
+    const monzoError = err.response?.data;
+    console.error("Monzo API Error Details:", monzoError || err.message);
+  
+    if (monzoError?.code) {
+      return res.status(400).json({ 
+        error: "API_ERROR", 
+        code: monzoError.code 
+      });
+    }
+  
+    res.status(400).json({ error: "API_ERROR" });
   }
 });
 
 export default router;
+

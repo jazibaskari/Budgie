@@ -1,115 +1,101 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../api/axiosConfig';
-import { X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface DraftTransaction {
-  date: string;
-  description: string;
-  amount: number;
-  merchant: string;
-  category: string;
-}
+const CATEGORIES = ["Charity", "Travel", "Transport", "Personal Shopping", "Groceries", "Health & Beauty", "Utilities & Bills", "Food", "Declined"];
+const ITEMS_PER_PAGE = 10;
 
 interface ReviewModalProps {
-  drafts: DraftTransaction[];
+  transactions: any[];
   onClose: () => void;
-  onSuccess: () => void;
+  onConfirm: (finalData: any[]) => void;
 }
 
-const ReviewModal: React.FC<ReviewModalProps> = ({ drafts, onClose, onSuccess }) => {
+const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConfirm }) => {
+  const [items, setItems] = useState(transactions);
+  const [currentPage, setCurrentPage] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setItems(transactions);
+    setCurrentPage(0);
+  }, [transactions]);
+
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const paginatedItems = items.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
+
+  const updateCategory = (pageIdx: number, cat: string) => {
+    const actualIdx = currentPage * ITEMS_PER_PAGE + pageIdx;
+    const newItems = [...items];
+    newItems[actualIdx].category = cat;
+    setItems(newItems);
+  };
 
   const handleConfirm = async () => {
     setIsSaving(true);
-    setError(null);
     try {
-
-      await api.post('/transactions/confirm', {
-        transactions: drafts,
-        month: new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
-      });
-      
-      onSuccess();
+      await api.post('/transactions/confirm', { transactions: items });
+      onConfirm(items);
     } catch (err) {
-      console.error('Confirmation Error:', err);
-      setError(err.response?.data?.error || 'Failed to save transactions.');
+      console.error("Confirm Error:", err);
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
       <div className="bg-[#111] border border-[#222] w-full max-w-4xl max-h-[80vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl">
-        
         <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
-          <div>
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <CheckCircle2 className="text-emerald-500" size={20} />
-              Review AI Extraction
-            </h2>
-            <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest font-bold">
-              Verify {drafts.length} Transactions
-            </p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-[#222] rounded-full text-gray-500 transition-colors">
-            <X size={20} />
-          </button>
+          <h2 className="text-xl font-medium text-white">Review Transactions ({items.length} total)</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={20}/></button>
         </div>
 
-        <div className="overflow-y-auto flex-1 bg-black">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-[#1A1A1A] text-[#666] z-10">
+        <div className="overflow-y-auto flex-1">
+          <table className="w-full text-left">
+            <thead className="bg-[#1A1A1A] text-[#666] text-[10px] sticky top-0 z-10">
               <tr>
-                <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Merchant</th>
-                <th className="p-5 font-bold text-[10px] uppercase tracking-widest">Category</th>
-                <th className="p-5 font-bold text-[10px] uppercase tracking-widest text-right">Amount</th>
+                <th className="p-5">Merchant</th>
+                <th className="p-5">Category</th>
+                <th className="p-5 text-right">Amount</th>
               </tr>
             </thead>
             <tbody>
-              {drafts.map((t, idx) => (
-                <tr key={idx} className="border-b border-[#111] hover:bg-[#161616]/50 transition-all">
+              {paginatedItems.map((t, idx) => (
+                <tr key={idx} className="border-b border-[#222]">
+                  <td className="p-5 text-sm text-white">{t.merchant?.name || t.description || t.merchant || "Unknown"}</td>
                   <td className="p-5">
-                    <div className="text-sm font-bold text-white">{t.merchant}</div>
-                    <div className="text-[10px] text-gray-600 font-mono mt-1">{t.date}</div>
+                    <div className="relative">
+                      <select 
+                        value={t.category || "Food"} 
+                        onChange={(e) => updateCategory(idx, e.target.value)}
+                        className="appearance-none bg-[#222] border border-[#333] text-emerald-500 text-[11px] px-3 py-1 rounded-lg w-full outline-none"
+                      >
+                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <ChevronDown size={12} className="absolute right-2 top-2 text-emerald-500 pointer-events-none"/>
+                    </div>
                   </td>
-                  <td className="p-5">
-                    <span className="px-3 py-1 rounded-md bg-[#222] text-emerald-500 text-[11px] font-bold border border-emerald-500/10">
-                      {t.category}
-                    </span>
-                  </td>
-                  <td className="p-5 text-right font-mono font-bold text-white">
-                    £{Math.abs(t.amount).toFixed(2)}
-                  </td>
+                  <td className="p-5 text-right text-white text-sm">£{(Math.abs(t.amount) / 100).toFixed(2)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <div className="p-6 border-t border-[#222] bg-[#161616] flex flex-col gap-4">
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-xs font-bold mb-2">
-              <AlertCircle size={14} /> {error}
-            </div>
-          )}
-          
-          <div className="flex justify-end gap-4">
-            <button 
-              onClick={onClose}
-              className="px-6 py-3 text-sm font-bold text-gray-400 hover:text-white transition-all"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleConfirm}
-              disabled={isSaving}
-              className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-emerald-900 disabled:text-emerald-500 text-black font-black text-sm rounded-xl transition-all flex items-center gap-2"
-            >
-              {isSaving ? 'SAVING TO COSMOS...' : 'CONFIRM & SAVE'}
-            </button>
+        {items.length > ITEMS_PER_PAGE && (
+          <div className="px-6 py-4 border-t border-[#222] flex justify-center items-center gap-4 bg-[#161616]">
+            <button disabled={currentPage === 0} onClick={() => setCurrentPage(p => p - 1)} className="p-2 text-white hover:text-emerald-500 disabled:opacity-20"><ChevronLeft size={24} /></button>
+            <span className="text-xs text-gray-400 font-bold">PAGE {currentPage + 1} OF {totalPages}</span>
+            <button disabled={currentPage >= totalPages - 1} onClick={() => setCurrentPage(p => p + 1)} className="p-2 text-white hover:text-emerald-500 disabled:opacity-20"><ChevronRight size={24} /></button>
           </div>
+        )}
+
+        <div className="p-6 bg-[#161616] border-t border-[#222] flex justify-end gap-4">
+          <button onClick={onClose} className="text-gray-400 text-sm">Cancel</button>
+          <button onClick={handleConfirm} disabled={isSaving} className="bg-emerald-500 text-black px-8 py-3 rounded-xl font-black text-sm hover:bg-emerald-400 disabled:opacity-50">
+            {isSaving ? 'Saving...' : 'Confirm'}
+          </button>
         </div>
       </div>
     </div>

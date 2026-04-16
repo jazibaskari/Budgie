@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-// Import the custom instance we configured with withCredentials and baseURL
 import api from '../api/axiosConfig'; 
 import { FinanceContext } from './FinanceContextCore';
 import type { Transaction } from '../types/finance';

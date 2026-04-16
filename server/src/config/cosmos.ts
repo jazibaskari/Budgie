@@ -1,21 +1,28 @@
-import { CosmosClient } from "@azure/cosmos";
+import { CosmosClient, Container } from "@azure/cosmos";
 import dotenv from 'dotenv';
-
 dotenv.config();
 
-const endpoint = process.env.COSMOS_ENDPOINT!;
-const key = process.env.COSMOS_KEY!;
+const client = new CosmosClient({ 
+  endpoint: process.env.COSMOS_ENDPOINT!, 
+  key: process.env.COSMOS_KEY! 
+});
 
-export const client = new CosmosClient({ endpoint, key });
+export const database = client.database("BudgieDB");
+
+export const getContainer = (containerId: string): Container => {
+  return database.container(containerId);
+};
 
 export const initDatabase = async () => {
-  try {
-    const { database } = await client.databases.createIfNotExists({ id: "BudgieDB" });
-    await database.containers.createIfNotExists({ id: "Users", partitionKey: "/id" });
-    await database.containers.createIfNotExists({ id: "Transactions", partitionKey: "/userId" });
-    console.log("✅ Cosmos DB Ready");
-  } catch (error) {
-    console.error("Cosmos DB Init Error:", error);
-    throw error; 
+  const containers = [
+    { id: "Transactions", partitionKey: { paths: ["/userId"] } },
+    { id: "monzo-auth", partitionKey: { paths: ["/id"] } },
+    { id: "Users", partitionKey: { paths: ["/id"] } }
+  ];
+
+  for (const c of containers) {
+    await database.containers.createIfNotExists(c);
+    console.log(`Container verified/created: ${c.id}`);
   }
+  console.log('Database fully initialised.');
 };

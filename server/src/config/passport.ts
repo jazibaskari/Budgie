@@ -1,34 +1,41 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { client } from './cosmos.js';
-import dotenv from 'dotenv';
+import { database } from './db.js';
 import crypto from 'crypto';
 
-dotenv.config();
-
-const container = client.database("BudgieDB").container("Users");
-
 export const configurePassport = () => {
-  passport.serializeUser((user: any, done) => {
+  const getUsersContainer = () => database.container("Users");
 
+  passport.serializeUser((user: any, done) => {
+    if (!user || !user.googleId) {
+      console.error("Serialize failed - user missing googleId");
+      return done(new Error("User object missing googleId"), null);
+    }
     done(null, user.googleId);
   });
 
-  passport.deserializeUser(async (googleId: unknown, done) => {
-
-    if (typeof googleId !== 'string') {
-      return done(null, null);
-    }
-
+  passport.deserializeUser(async (googleId: string, done) => {
     try {
+      console.log("Attempting to deserialize:", googleId);
+      const container = database.container("Users");
+      
       const { resources } = await container.items
         .query({
           query: "SELECT * FROM c WHERE c.googleId = @gid",
           parameters: [{ name: "@gid", value: googleId }]
         })
         .fetchAll();
-      done(null, resources[0] || null);
+      
+      if (resources.length > 0) {
+        const user = resources[0];
+        console.log("Found user object in DB:", user.id);
+        done(null, user);
+      } else {
+        console.log("User NOT found in DB for googleId:", googleId);
+        done(null, false);
+      }
     } catch (err) {
+      console.error("Deserialize Error:", err);
       done(err, null);
     }
   });
@@ -40,6 +47,7 @@ export const configurePassport = () => {
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        const container = getUsersContainer();
         const { resources } = await container.items
           .query({
             query: "SELECT * FROM c WHERE c.googleId = @gid",
@@ -47,24 +55,27 @@ export const configurePassport = () => {
           })
           .fetchAll();
 
-        if (resources[0]) {
+        if (resources.length > 0) {
+          console.log("Google Strategy - Existing user found");
           return done(null, resources[0]);
         }
 
+        console.log("Google Strategy - Creating new user");
         const newUser = {
-          id: crypto.randomUUID(),
-          googleId: profile.id,
+          id: crypto.randomUUID(), 
+          googleId: profile.id,   
           displayName: profile.displayName,
           email: profile.emails?.[0]?.value || '',
           avatar: profile.photos?.[0]?.value || '',
           budgets: {},
           createdAt: new Date().toISOString()
         };
-
+        
         const { resource } = await container.items.create(newUser);
         return done(null, resource);
-      } catch (err) {
-        return done(err as any, undefined);
+      } catch (err) { 
+        console.error("Google Strategy Error:", err);
+        return done(err as any, undefined); 
       }
     }
   ));
