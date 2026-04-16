@@ -1,9 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/axiosConfig';
 import { X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const CATEGORIES = ["Charity", "Travel", "Transport", "Personal Shopping", "Groceries", "Health & Beauty", "Utilities & Bills", "Food", "Declined"];
 const ITEMS_PER_PAGE = 10;
+
+// The raw Monzo categories
+const MONZO_CATEGORIES = [
+  "general", "eating_out", "expenses", "transport", "cash", 
+  "bills", "entertainment", "shopping", "holidays", "groceries"
+];
+
+// Helper: Converts 'eating_out' to 'Eating Out'
+const formatCategory = (str: string) => {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Create the dropdown list: { original: 'eating_out', display: 'Eating Out' }
+const ALL_CATEGORIES = MONZO_CATEGORIES.map(cat => ({
+  value: cat,
+  label: formatCategory(cat)
+}));
 
 interface ReviewModalProps {
   transactions: any[];
@@ -12,14 +31,29 @@ interface ReviewModalProps {
 }
 
 const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConfirm }) => {
-  const [items, setItems] = useState(transactions);
+  const [items, setItems] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    setItems(transactions);
-    setCurrentPage(0);
+  const processedTransactions = useMemo(() => {
+    return [...transactions]
+      .filter(t => {
+        if (t.category === 'Declined' || t.decline_reason) return false;
+        const isTransfer = t.category?.toLowerCase() === 'transfers';
+        if (isTransfer && t.amount > 0) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.created || a.createdAt || a.date || 0).getTime();
+        const dateB = new Date(b.created || b.createdAt || b.date || 0).getTime();
+        return dateB - dateA;
+      });
   }, [transactions]);
+
+  useEffect(() => {
+    setItems(processedTransactions);
+    setCurrentPage(0);
+  }, [processedTransactions]);
 
   const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
   const paginatedItems = items.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
@@ -47,7 +81,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
       <div className="bg-[#111] border border-[#222] w-full max-w-4xl max-h-[80vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl">
         <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
-          <h2 className="text-xl font-medium text-white">Review Transactions ({items.length} total)</h2>
+          <h2 className="text-xl font-medium text-white">Review Transactions</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-white"><X size={20}/></button>
         </div>
 
@@ -67,11 +101,13 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
                   <td className="p-5">
                     <div className="relative">
                       <select 
-                        value={t.category || "Food"} 
+                        value={t.category || "general"} 
                         onChange={(e) => updateCategory(idx, e.target.value)}
                         className="appearance-none bg-[#222] border border-[#333] text-emerald-500 text-[11px] px-3 py-1 rounded-lg w-full outline-none"
                       >
-                        {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        {ALL_CATEGORIES.map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
                       </select>
                       <ChevronDown size={12} className="absolute right-2 top-2 text-emerald-500 pointer-events-none"/>
                     </div>
