@@ -1,12 +1,18 @@
 export interface Transaction {
-    _id: string;
-    merchant: string;
-    amount: number;
-    category: string;
-    created: string;
-    month: string;
-    description: string;
-  }
+  _id: string;
+  id?: string; 
+  merchant: string | {
+      name: string;
+      logo?: string;
+      emoji?: string;
+      id: string;
+  };
+  amount: number;
+  category: string;
+  created: string;
+  month: string;
+  description: string;
+}
   
   export interface FinanceContextType {
     budgets: Record<string, number>;
