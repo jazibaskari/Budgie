@@ -120,7 +120,7 @@ const HighestExpenses: React.FC = () => {
                 £{totalSpent.toFixed(0)}
               </span>
               <span className="text-[#bfc0c0] font-medium leading-[1.2] ml-2 text-sm">
-                spent in <br /> {displayMonth}
+                Total <span className="text-[white] font-medium text-sm">{displayMonth} </span><br /> Expenses
               </span>
             </div>
           </div>

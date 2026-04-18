@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, LayoutDashboard, Lock, Settings, RefreshCcw, PieChart, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { LogOut, Lock, Settings, RefreshCcw, PieChart, AlertCircle, CheckCircle, X, WalletCards, SquareUser, HandCoins, CalendarDays } from 'lucide-react';
 import { useFinance } from '../hooks/useFinance'; 
 import ReviewModal from '../components/ReviewModal';
 import BudgetManager from '../components/BudgetManager';
@@ -10,6 +10,7 @@ import HighestExpenses from '../components/HighestExpenses';
 import type { Transaction } from '../types/finance'; 
 import api from '../api/axiosConfig';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
+
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -23,31 +24,44 @@ const LockedSection = ({ title, message, id }: { title: string, message: string,
 
 export default function Dashboard() {
   const { transactions, budgets, currentMonth, isLoading, fetchFinanceData, setTransactions } = useFinance();
+  const displayMonth = currentMonth ? currentMonth.split(' ')[0] : '';
   const [drafts, setDrafts] = useState<any[] | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false); 
+  const [userName, setUserName] = useState('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success', title: string, message: string, isAuthError?: boolean } | null>(null);
   
   const monzoDataFetched = transactions.length > 0;
   const hasBudgetsSet = budgets && Object.values(budgets).some(val => Number(val) > 0);
 
   useEffect(() => {
-    const pendingAuth = localStorage.getItem('pending_monzo_auth');
+    const fetchUserProfile = async () => {
+      try {
+        const response = await api.get('/user/profile');
+        if (response.data && response.data.name) {
+          const firstName = response.data.name.split(' ')[0];
+          setUserName(firstName);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      }
+    };
 
+    fetchUserProfile();
+
+    const pendingAuth = localStorage.getItem('pending_monzo_auth');
     const fromMonzo = document.referrer.includes('monzo.com') || window.location.search.includes('code=');
   
     if (fromMonzo || pendingAuth === 'true') {
       localStorage.removeItem('pending_monzo_auth');
-      
       setAlert({
         type: 'error',
         title: 'Action Required',
         message: 'Authenticating with Monzo... Please check your mobile app to approve.',
         isAuthError: true
       });
-  
       syncMonzoData();
     }
   }, []);
@@ -143,22 +157,47 @@ export default function Dashboard() {
       </nav>
 
       <main className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${isAnyModalOpen ? 'blur-md brightness-50' : ''}`}>
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-[#222] pb-8">
-          <div>
-            <h1 className="text-3xl font-medium flex items-center gap-3"><LayoutDashboard size={32} className="text-emerald-500" />Welcome, Jaz</h1>
-            <p className="text-gray-500 mt-1 mb-6">Budget for <span className="text-emerald-500 font-medium">{currentMonth}</span></p>
-            <div className="flex gap-4">
-              <button onClick={syncMonzoData} disabled={isSyncing} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-black rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
-                {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
-                {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
-              </button>
-              <button onClick={() => setIsBudgetModalOpen(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium">
-                <PieChart size={16} />Configure Budget
-              </button>
-            </div>
-          </div>
-        </header>
-
+      <header className="mb-12 border-b border-[#222] pb-8">
+  <div className="flex flex-row items-stretch gap-[20px]">
+    <div className="flex-none max-w-2xl flex flex-col">
+      <h1 className="text-5xl font-bold text-white leading-none">
+        {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
+      </h1>
+      <p className="text-gray-300 font- text-4xl mb-2">
+        <span className="text-emerald-500">{currentMonth}</span>
+      </p> 
+      <p className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
+        Simply click 'Sync Monzo' and authenticate with Monzo via e-mail and your mobile device. Next, hit 'Configure Budget' to set your budget for this month. These steps help ensure your Monzo transaction history is up-to-date, and your budgets are set, allowing you to track your spending effectively. Easily monitor your spending habits with the resulting inights, and filter data however you'd like.
+      </p>
+      
+      <div className="flex gap-4 mt-auto">
+        <button 
+          onClick={syncMonzoData} 
+          disabled={isSyncing} 
+          className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-black rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all"
+        >
+          {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
+          {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
+        </button>
+        <button 
+          onClick={() => setIsBudgetModalOpen(true)} 
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all"
+        >
+          <PieChart size={16} />
+          Configure Budget
+        </button>
+      </div>
+    </div>
+    <div className="flex-1 flex justify-end items-stretch overflow-hidden">
+      <div className="grid grid-cols-2 gap-6 h-full text-white-500 opacity-[0.8]">
+        <WalletCards className="h-full w-auto" strokeWidth={1} />
+<HandCoins className="h-full w-auto" strokeWidth={1} />
+<SquareUser className="h-full w-auto" strokeWidth={1} />
+<CalendarDays className="h-full w-auto" strokeWidth={1} />
+      </div>
+    </div>
+  </div>
+</header>
         {!hasBudgetsSet ? (
           <LockedSection title="Dashboard Locked" message="Please set your monthly budgets to unlock tracking." />
         ) : !monzoDataFetched ? (
@@ -169,7 +208,7 @@ export default function Dashboard() {
         ) : (
           <div className="animate-in fade-in duration-700">
             <section id="transactions" className="bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl mb-8">
-              <div className="p-6 border-b border-[#222] bg-[#161616]"><h2 className="text-xl font-medium">This Month's Transactions</h2></div>
+              <div className="p-6 border-b border-[#222] bg-[#161616]"><h2 className="text-xl font-medium">{displayMonth}'s Transactions</h2></div>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -210,15 +249,15 @@ export default function Dashboard() {
       </main>
 
       {isBudgetModalOpen && (
-  <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
-    <div className="w-full max-w-4xl">
-      <BudgetManager 
-        key={JSON.stringify(budgets)} 
-        onClose={() => setIsBudgetModalOpen(false)} 
-      />
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
+          <div className="w-full max-w-4xl">
+            <BudgetManager 
+              key={JSON.stringify(budgets)} 
+              onClose={() => setIsBudgetModalOpen(false)} 
+            />
+          </div>
+        </div>
+      )}
 
       {drafts && (
         <ReviewModal 
