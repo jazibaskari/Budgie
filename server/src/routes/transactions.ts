@@ -85,7 +85,8 @@ router.get('/transactions', async (req: AuthRequest, res: Response) => {
       params: { 
         account_id: process.env.MONZO_ACCOUNT_ID, 
         since: '2026-01-01T00:00:00Z', 
-        limit: 100 
+        limit: 100,
+        "expand[]": "merchant" 
       }
     });
     

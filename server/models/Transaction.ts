@@ -7,6 +7,11 @@ export interface ITransaction {
     category: string;
     month: string;    
     createdAt: string;
-    merchant: string; 
+    merchant: string | {
+        name: string;
+        logo?: string;
+        emoji?: string;
+        id: string;
+    }; 
     status: 'pending' | 'verified'; 
 }
