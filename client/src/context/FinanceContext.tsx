@@ -9,23 +9,19 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-
-  const fetchFinanceData = useCallback(async () => {
+ 
+  const fetchFinanceData = useCallback(async (options = { forceRefresh: true }) => {
     setIsLoading(true);
     try {
       const res = await api.get('/user/finance-data');
-      
       if (res.data) {
-
         setBudgets(res.data.budgets || {});
-        setTransactions(res.data.transactions || []);
+        if (res.data.transactions) {
+          setTransactions(res.data.transactions);
+        }
       }
     } catch (err) {
-      console.error("Finance Context Fetch Error:", err.response?.data?.message || err.message);
-      
-      if (err.response?.status === 401) {
-        console.warn("User session invalid or expired.");
-      }
+      console.error("Fetch Error:", err);
     } finally {
       setIsLoading(false);
     }

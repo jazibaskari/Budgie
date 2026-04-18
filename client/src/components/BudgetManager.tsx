@@ -4,8 +4,8 @@ import api from '../api/axiosConfig';
 import { useFinance } from '../hooks/useFinance';
 
 const DEFAULT_CATEGORIES = [
-  "Charity", "Travel", "Transport", "Personal Shopping", 
-  "Groceries", "Health & Beauty", "Utilities & Bills", "Food"
+  "General", "Holidays", "Transport", "Shopping", 
+  "Groceries", "Entertainment", "Bills", "Eating Out", "Cash", "Expenses"
 ];
 
 interface BudgetManagerProps {
@@ -33,13 +33,11 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onMonzoFetch }) => {
   }, []);
 
   useEffect(() => {
-    if (budgets && Object.keys(budgets).length > 0) {
-      setLocalBudgets(budgets);
-    } else {
-      const initial: Record<string, string> = {};
-      DEFAULT_CATEGORIES.forEach(cat => { initial[cat] = ""; });
-      setLocalBudgets(initial);
-    }
+    const initial: Record<string, string | number> = {};
+    DEFAULT_CATEGORIES.forEach(cat => {
+      initial[cat] = (budgets && budgets[cat] !== undefined) ? budgets[cat] : "";
+    });
+    setLocalBudgets(initial);
   }, [budgets]);
 
   const syncMonzoData = async (): Promise<{
@@ -143,7 +141,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onMonzoFetch }) => {
         message: 'Budgets saved successfully.'
       });
   
-    } catch  {
+    } catch {
       setAlert({
         type: 'error',
         title: 'Save Failed',

@@ -1,28 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api/axiosConfig';
 import { X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ALL_CATEGORIES } from '../utils/financeUtils';
 
 const ITEMS_PER_PAGE = 10;
-
-// The raw Monzo categories
-const MONZO_CATEGORIES = [
-  "general", "eating_out", "expenses", "transport", "cash", 
-  "bills", "entertainment", "shopping", "holidays", "groceries"
-];
-
-// Helper: Converts 'eating_out' to 'Eating Out'
-const formatCategory = (str: string) => {
-  return str
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
-};
-
-// Create the dropdown list: { original: 'eating_out', display: 'Eating Out' }
-const ALL_CATEGORIES = MONZO_CATEGORIES.map(cat => ({
-  value: cat,
-  label: formatCategory(cat)
-}));
 
 interface ReviewModalProps {
   transactions: any[];
@@ -68,8 +49,9 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
   const handleConfirm = async () => {
     setIsSaving(true);
     try {
-      await api.post('/transactions/confirm', { transactions: items });
-      onConfirm(items);
+      await api.post('/monzo/confirm', { transactions: items });
+      // Pass the items back to the parent
+      onConfirm(items); 
     } catch (err) {
       console.error("Confirm Error:", err);
     } finally {
@@ -106,8 +88,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
                         className="appearance-none bg-[#222] border border-[#333] text-emerald-500 text-[11px] px-3 py-1 rounded-lg w-full outline-none"
                       >
                         {ALL_CATEGORIES.map(c => (
-                          <option key={c.value} value={c.value}>{c.label}</option>
-                        ))}
+    <option key={c.value} value={c.value}>{c.label}</option>
+  ))}
                       </select>
                       <ChevronDown size={12} className="absolute right-2 top-2 text-emerald-500 pointer-events-none"/>
                     </div>

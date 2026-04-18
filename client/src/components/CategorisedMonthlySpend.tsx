@@ -10,37 +10,34 @@ import {
   Cell
 } from 'recharts';
 import { useFinance } from '../hooks/useFinance';
+import { ALL_CATEGORIES } from '../utils/financeUtils';
 
 const CategorisedMonthlySpend: React.FC = () => {
   const { transactions, budgets } = useFinance();
 
   const chartData = useMemo(() => {
-    const categoryTotals: Record<string, number> = {};
-    Object.keys(budgets).forEach(cat => {
-      categoryTotals[cat] = 0;
+    return ALL_CATEGORIES.map(({ value, label }) => {
+      const spent = transactions
+        .filter(t => t.category === value || t.category.toLowerCase() === label.toLowerCase())
+        .reduce((sum, t) => sum + Math.abs(t.amount / 100), 0);
+
+      const limit = Number((budgets && budgets[label]) || 0);
+      const isOverBudget = limit > 0 && spent > limit;
+      
+      const remaining = isOverBudget ? 0 : (limit - spent);
+
+      return {
+        name: label,
+        spent,
+        remaining,
+        isOverBudget
+      };
     });
-
-    transactions.forEach(t => {
-      if (t.category in categoryTotals) {
-        categoryTotals[t.category] += Math.abs(t.amount);
-      }
-    });
-
-    return Object.entries(categoryTotals).map(([name, amount]) => ({
-      name,
-      amount,
-
-      limit: budgets[name] || 0,
-      isOverBudget: budgets[name] ? amount > budgets[name] : false
-    }));
   }, [transactions, budgets]);
 
   return (
     <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 h-[450px] shadow-xl">
       <div className="flex flex-col mb-6">
-        <h3 className="text-white text-sm font-medium  opacity-80">
-          Categorised Monthly Spend
-        </h3>
       </div>
 
       <div className="h-[320px] w-full">
@@ -77,29 +74,29 @@ const CategorisedMonthlySpend: React.FC = () => {
                 fontSize: '12px'
               }}
               itemStyle={{ color: '#fff' }}
-              formatter={(value: number) => [`£${value.toFixed(2)}`, 'Spent']}
+              formatter={(value: number, name: string) => [`£${value.toFixed(2)}`, name === 'spent' ? 'Spent' : 'Remaining']}
             />
-            <Bar 
-              dataKey="amount" 
-              radius={[4, 4, 0, 0]} 
-              barSize={32}
-            >
+            <Bar dataKey="spent" stackId="a" radius={[0, 0, 0, 0]} barSize={32}>
               {chartData.map((entry, index) => (
                 <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.isOverBudget ? '#ef4444' : '#d1d5db'} 
-                  fillOpacity={entry.amount === 0 ? 0.1 : 1}
+                  key={`spent-${index}`} 
+                  fill={entry.isOverBudget ? '#ef4444' : '#10b981'} 
                 />
               ))}
             </Bar>
+            <Bar dataKey="remaining" stackId="a" radius={[4, 4, 0, 0]} barSize={32} fill="#ffffff" fillOpacity={0.1} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-6">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-[#d1d5db] rounded"></div>
-          <span className="text-[10px] text-gray-500 font-medium er">Under Budget</span>
+          <div className="w-3 h-3 bg-[#10b981] rounded"></div>
+          <span className="text-[10px] text-gray-500 font-medium er">Spent</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-[#ffffff] opacity-20 rounded"></div>
+          <span className="text-[10px] text-gray-500 font-medium er">Remaining</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 bg-[#ef4444] rounded"></div>

@@ -17,13 +17,20 @@ router.get('/finance-data', auth, (async (req: AuthRequest, res: Response) => {
     
     const { resources: transactions } = await transContainer.items
       .query({
-        query: "SELECT * FROM c WHERE c.userId = @uid AND c.month = @month",
-        parameters: [{ name: "@uid", value: String(user.id) }, { name: "@month", value: month }]
+        query: "SELECT * FROM c WHERE c.userId = @gid AND c.month = @month",
+        parameters: [
+          { name: "@gid", value: user.googleId }, 
+          { name: "@month", value: month }
+        ]
       })
       .fetchAll();
 
-    res.json({ budgets: user.budgets || {}, transactions: transactions || [] });
+    res.json({ 
+      budgets: user.budgets || {}, 
+      transactions: transactions || [] 
+    });
   } catch (err: any) {
+    console.error("Finance Data Fetch Error:", err);
     res.status(500).json({ error: "Failed to fetch data" });
   }
 }) as RequestHandler);
