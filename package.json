@@ -2,8 +2,11 @@
     "name": "budgie",
     "private": true,
     "workspaces": [
-      "client",
-      "server",
-      "shared"
-    ]
-  }
+        "client",
+        "server",
+        "shared"
+    ],
+    "dependencies": {
+        "connect-cosmosdb": "^1.0.1"
+    }
+}

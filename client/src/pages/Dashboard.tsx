@@ -35,8 +35,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     const pendingAuth = localStorage.getItem('pending_monzo_auth');
-    if (document.referrer.includes('monzo.com') || pendingAuth === 'true') {
+
+    const fromMonzo = document.referrer.includes('monzo.com') || window.location.search.includes('code=');
+  
+    if (fromMonzo || pendingAuth === 'true') {
       localStorage.removeItem('pending_monzo_auth');
+      
+      setAlert({
+        type: 'error',
+        title: 'Action Required',
+        message: 'Authenticating with Monzo... Please check your mobile app to approve.',
+        isAuthError: true
+      });
+  
       syncMonzoData();
     }
   }, []);
@@ -60,21 +71,24 @@ export default function Dashboard() {
       setIsAuthorized(true); 
     } catch (err: any) {
       const monzoCode = err.response?.data?.code;
-      if (monzoCode?.includes('insufficient_permissions') || err.response?.status === 403) {
+      const status = err.response?.status;
+  
+      if (status === 403 || status === 400 || monzoCode?.includes('permissions')) {
         setIsAuthorized(false); 
         setAlert({
           type: 'error',
           title: 'Approval Required',
-          message: 'Please check your Monzo app and approve the request. If you missed the notification, you can restart the process.',
+          message: 'Please check your Monzo app and approve the request. Once approved, click "Try Again".',
           isAuthError: true
         });
-      } else if (monzoCode === 'forbidden.verification_required' || err.response?.status === 401) {
-        setIsAuthorized(false);
+      } else if (status === 401) {
         restartAuth();
       } else {
         setAlert({ type: 'error', title: 'Sync Failed', message: 'Could not fetch transactions.' });
       }
-    } finally { setIsSyncing(false); }
+    } finally { 
+      setIsSyncing(false); 
+    }
   };
   
   const onConfirmSuccess = async (confirmedData: Transaction[]) => {
@@ -120,7 +134,7 @@ export default function Dashboard() {
 
       <nav className={`sticky top-0 z-50 w-full bg-app-bg/80 backdrop-blur-md border-b border-[#222] transition-all duration-300 ${isAnyModalOpen ? 'blur-sm brightness-50' : ''}`}>
         <div className="max-w-[1126px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
-          <h2 className="text-white font-bold text-lg">Budgie</h2>
+          <h2 className="text-white font-bold text-lg">Budgy</h2>
           <div className="flex items-center gap-6">
             <button onClick={() => setIsSettingsOpen(true)} className="text-gray-400 hover:text-white"><Settings size={16} /></button>
             <button onClick={() => window.location.href = 'http://localhost:5000/api/auth/logout'} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
