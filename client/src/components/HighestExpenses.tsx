@@ -66,8 +66,9 @@ const HighestExpenses: React.FC = () => {
 
   return (
     <>
-      <h1 className="text-2xl font-medium">Highest Expenses</h1>
+    
       <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-xl flex flex-col flex-1">
+      <h1 className="text-2xl font-medium">Highest Expenses</h1>
         <div className="flex-1 flex flex-col justify-between">
           
           <div className="flex flex-wrap gap-3">

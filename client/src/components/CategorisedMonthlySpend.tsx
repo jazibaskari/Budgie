@@ -37,6 +37,7 @@ const CategorisedMonthlySpend: React.FC = () => {
 
   return (
     <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 h-[450px] shadow-xl">
+      <h1 className="text-2xl font-medium">Categorised Monthly Spend</h1>
       <div className="flex flex-col mb-6">
       </div>
 

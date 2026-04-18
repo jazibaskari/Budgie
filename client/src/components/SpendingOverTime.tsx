@@ -40,8 +40,9 @@ const SpendingOverTime: React.FC = () => {
 
   return (
     <>
-    <h1 className="text-2xl font-medium">Spending Over Time</h1>
+ 
     <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 h-[320px] shadow-xl flex flex-col">
+    <h1 className="text-2xl font-medium">Spending Over Time</h1>
       <div className="flex flex-col mb-6">
       </div>
       <div className="flex-1 w-full">

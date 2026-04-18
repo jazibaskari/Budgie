@@ -50,7 +50,6 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
     setIsSaving(true);
     try {
       await api.post('/monzo/confirm', { transactions: items });
-      // Pass the items back to the parent
       onConfirm(items); 
     } catch (err) {
       console.error("Confirm Error:", err);
