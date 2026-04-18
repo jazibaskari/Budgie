@@ -12,7 +12,10 @@ const REDIRECT_URI = 'http://localhost:5000/api/auth/monzo/callback';
 
 router.get('/auth', (req: AuthRequest, res: Response) => {
   const googleId = req.user?.googleId;
-  if (!googleId) return res.status(401).send("Not logged in");
+
+  if (!googleId) {
+    return res.redirect('http://localhost:5000/api/auth/google');
+  }
 
   const state = Buffer.from(googleId).toString('base64');
   const authUrl = `https://auth.monzo.com/?client_id=${process.env.MONZO_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${state}`;
