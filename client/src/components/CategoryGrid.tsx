@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { 
   Heart, 
@@ -11,28 +11,38 @@ import {
   Gift, 
   HelpCircle 
 } from 'lucide-react';
+import { ALL_CATEGORIES } from '../utils/financeUtils';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  "Charity": <Gift size={18} />,
-  "Travel": <Plane size={18} />,
+  "General": <Gift size={18} />,
+  "Holidays": <Plane size={18} />,
   "Transport": <Car size={18} />,
-  "Personal Shopping": <Briefcase size={18} />,
+  "Shopping": <Briefcase size={18} />,
   "Groceries": <ShoppingCart size={18} />,
-  "Health & Beauty": <Heart size={18} />,
-  "Utilities & Bills": <Zap size={18} />,
-  "Food": <Utensils size={18} />,
+  "Entertainment": <Heart size={18} />,
+  "Bills": <Zap size={18} />,
+  "Eating Out": <Utensils size={18} />,
+  "Cash": <Utensils size={18} />,
+  "Expenses": <Utensils size={18} />,
 };
 
 const CategoryGrid: React.FC = () => {
   const { transactions, budgets } = useFinance();
 
+  useEffect(() => {
+    console.log("CategoryGrid received transactions:", transactions);
+    console.log("Budget keys:", Object.keys(budgets || {}));
+  }, [transactions, budgets]);
+
   return (
     <div className="grid grid-cols-1 gap-4">
-      {Object.entries(budgets).map(([category, limit]) => {
+      {ALL_CATEGORIES.map((cat) => {
+        const category = cat.label;
+        const limit = Number((budgets && budgets[category]) || 0);
 
         const spent = transactions
-          .filter(t => t.category === category)
-          .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+          .filter(t => t.category === cat.value || t.category.toLowerCase() === category.toLowerCase()) 
+          .reduce((sum, t) => sum + Math.abs(t.amount / 100), 0);
         
         const percent = limit > 0 ? (spent / limit) * 100 : 0;
         const remaining = limit - spent;

@@ -3,8 +3,9 @@ export interface Transaction {
     merchant: string;
     amount: number;
     category: string;
-    date: string;
+    created: string;
     month: string;
+    description: string;
   }
   
   export interface FinanceContextType {
@@ -12,7 +13,8 @@ export interface Transaction {
     transactions: Transaction[];
     setBudgets: React.Dispatch<React.SetStateAction<Record<string, number>>>;
     setTransactions: React.Dispatch<React.SetStateAction<Transaction[]>>;
-    fetchFinanceData: () => Promise<void>;
+    // fetchFinanceData: () => Promise<void>;
     currentMonth: string;
     isLoading: boolean;
+    fetchFinanceData: (options?: { forceRefresh: boolean }) => Promise<void>;
   }

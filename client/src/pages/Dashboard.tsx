@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LogOut, LayoutDashboard, Lock, Settings } from 'lucide-react';
 import { useFinance } from '../hooks/useFinance'; 
 import ReviewModal from '../components/ReviewModal';
 import BudgetManager from '../components/BudgetManager';
 import CategoryGrid from '../components/CategoryGrid';
 import CategorisedMonthlySpend from '../components/CategorisedMonthlySpend';
+import SpendingOverTime from '../components/SpendingOverTime';
+import HighestExpenses from '../components/HighestExpenses';
 import type { Transaction } from '../types/finance'; 
+import api from '../api/axiosConfig';
+import { ALL_CATEGORIES } from '../utils/financeUtils';
+
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -20,7 +25,7 @@ const LockedSection = ({ title, message, id }: { title: string, message: string,
 );
 
 export default function Dashboard() {
-  const { transactions, budgets, currentMonth, isLoading, fetchFinanceData } = useFinance();
+  const { transactions, budgets, currentMonth, isLoading, fetchFinanceData, setTransactions } = useFinance();
   const [drafts, setDrafts] = useState<any[] | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [accessToken, setAccessToken] = useState('');
@@ -28,6 +33,10 @@ export default function Dashboard() {
   
   const monzoDataFetched = transactions.length > 0;
   const hasBudgetsSet = Object.values(budgets).some(val => Number(val) > 0);
+
+  useEffect(() => {
+    console.log("Current Transactions in Context:", transactions);
+  }, [transactions]);
 
   const handleSaveSettings = async () => {
     try {
@@ -56,11 +65,18 @@ export default function Dashboard() {
     }, 10);
   };
   
-  const onConfirmSuccess = () => {
+  const onConfirmSuccess = async (confirmedData: Transaction[]) => {
     setDrafts(null); 
-    fetchFinanceData(); 
+    setTransactions(confirmedData);
+    
+    try {
+      await api.post('/monzo/confirm', { transactions: confirmedData });
+      console.log("Confirmed and saved to DB");
+    } catch (err) {
+      console.error("Failed to save:", err);
+    }
   };
-
+  
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
     const offset = 80; 
@@ -175,14 +191,24 @@ export default function Dashboard() {
                   <tbody>
                     {transactions.map((t: Transaction) => (
                       <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616] transition-all">
-                        <td className="p-5 text-sm text-gray-500">{new Date(t.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</td>
-                        <td className="p-5 text-sm font-medium text-white">{t.merchant 
-    ? (typeof t.merchant === 'object' && t.merchant !== null ? t.merchant.name : t.merchant) 
-    : "Unknown Merchant"}</td>
-                        <td className="p-5 text-sm">
-                          <span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] font-medium border border-[#333]">{t.category}</span>
-                        </td>
-                        <td className="p-5 text-sm text-right font-medium text-white">£{Math.abs(t.amount).toFixed(2)}</td>
+                       <td className="p-5 text-sm text-gray-500">
+    {t.created 
+      ? new Date(t.created).toLocaleDateString(undefined, { 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        }) 
+      : "N/A"}
+  </td>
+<td className="p-5 text-sm font-medium text-white">
+  {t.description || (typeof t.merchant === 'object' && t.merchant !== null ? t.merchant.name : t.merchant) || "Unknown"}
+</td>
+<td className="p-5 text-sm">
+<span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] font-medium border border-[#333]">
+    {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
+  </span>
+</td>
+                        <td className="p-5 text-sm text-right font-medium text-white">£{(Math.abs(t.amount) / 100).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -198,21 +224,23 @@ export default function Dashboard() {
               <div className="lg:col-span-7 flex flex-col gap-4 mb-8">
                 <h1 className="text-2xl font-medium">Categorised Monthly Spend</h1>
                 <CategorisedMonthlySpend />
+                <SpendingOverTime />
+                <HighestExpenses />
               </div>
             </div>
           </div>
         )}
       </main>
       {drafts && (
-        <ReviewModal 
-          key={JSON.stringify(drafts)}
-          transactions={drafts} 
-          onClose={() => setDrafts(null)} 
-          onConfirm={() => {
-            onConfirmSuccess();
-          }}  
-        />
-      )}
+  <ReviewModal 
+    key={JSON.stringify(drafts)}
+    transactions={drafts} 
+    onClose={() => setDrafts(null)} 
+    onConfirm={(finalData) => {
+      onConfirmSuccess(finalData);
+    }}  
+  />
+)}
     </>
   );
 }

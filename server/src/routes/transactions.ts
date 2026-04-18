@@ -7,6 +7,7 @@ import type { AuthRequest } from '../middleware/verifyToken.js';
 
 const router = Router();
 const userContainer = getContainer("Users");
+const transContainer = getContainer("Transactions");
 const REDIRECT_URI = 'http://localhost:5000/api/auth/monzo/callback';
 
 router.get('/auth', (req: AuthRequest, res: Response) => {
@@ -98,6 +99,38 @@ router.get('/transactions', async (req: AuthRequest, res: Response) => {
     }
   
     res.status(400).json({ error: "API_ERROR" });
+  }
+});
+
+router.post('/confirm', async (req: AuthRequest, res: Response) => {
+  const googleId = req.user?.googleId;
+  if (!googleId) return res.status(401).json({ error: "Unauthorized" });
+
+  const { transactions } = req.body;
+
+  try {
+    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    const savePromises = transactions.map((t: any) => {
+      const transactionDocument = {
+        ...t,
+        userId: googleId,    
+        month: currentMonth, 
+        id: t.id || `local_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
+      };
+      
+      return transContainer.items.upsert(transactionDocument);
+    });
+
+    await Promise.all(savePromises);
+
+    res.status(200).json({ 
+      message: "Transactions confirmed and saved to Transactions container",
+      count: transactions.length 
+    });
+  } catch (err: any) {
+    console.error("Confirm Transaction Error:", err);
+    res.status(500).json({ error: "Failed to save transactions to container" });
   }
 });
 
