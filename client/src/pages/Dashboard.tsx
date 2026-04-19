@@ -12,6 +12,7 @@ import api from '../api/axiosConfig';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 import MiniCalendar from '../components/MiniCalendar';
 import TotalExpenses from '../components/TotalExpenses';
+import Footer from '../components/Footer';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -39,6 +40,7 @@ export default function Dashboard() {
 
   const monzoDataFetched = transactions.length > 0;
   const hasBudgetsSet = budgets && Object.values(budgets).some(val => Number(val) > 0);
+  const isFullyUnlocked = monzoDataFetched && hasBudgetsSet;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -77,6 +79,22 @@ export default function Dashboard() {
   const restartAuth = () => {
     localStorage.setItem('pending_monzo_auth', 'true');
     window.location.href = 'http://localhost:5000/api/monzo/auth';
+  };
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80;
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   };
 
   const syncMonzoData = async () => {
@@ -175,17 +193,41 @@ export default function Dashboard() {
         </div>
       )}
 
-      <nav className={`sticky top-0 z-50 w-full bg-app-bg/80 backdrop-blur-md border-b border-[#222] transition-all duration-300 ${isAnyModalOpen ? 'blur-sm brightness-50' : ''}`}>
+<nav className={`sticky top-0 z-50 w-full bg-app-bg/80 backdrop-blur-md border-b border-[#222] transition-all duration-300 ${isAnyModalOpen ? 'blur-sm brightness-50' : ''}`}>
         <div className="max-w-[1126px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
-          <h2 className="text-white font-bold text-lg">Budgy</h2>
+          <div className="flex items-center gap-10">
+          <button 
+                  onClick={() => scrollToSection('home')}
+                  className="text-white font-bold text-lg hover:text-white transition-colors"
+                >
+                  Budgy
+                </button>
+            {/* <h2 className="text-white font-bold text-lg">Budgy</h2> */}
+            {isFullyUnlocked && (
+              <div className="hidden md:flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
+                <button 
+                  onClick={() => scrollToSection('transactions')}
+                  className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                >
+                  Overview
+                </button>
+                <button 
+                  onClick={() => scrollToSection('metrics')}
+                  className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                >
+                  Insights
+                </button>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-6">
-            <button onClick={() => setIsSettingsOpen(true)} className="text-gray-400 hover:text-white"><Settings size={16} /></button>
+            <button onClick={() => setIsSettingsOpen(true)} className="text-gray-400 hover:text-white transition-colors"><Settings size={16} /></button>
             <button onClick={() => window.location.href = 'http://localhost:5000/api/auth/logout'} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
           </div>
         </div>
       </nav>
 
-      <main className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${isAnyModalOpen ? 'blur-md brightness-50' : ''}`}>
+      <main id="home" className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${isAnyModalOpen ? 'blur-md brightness-50' : ''}`}>
         <header className="mb-12 pb-8">
           <div className="flex flex-row items-stretch gap-[20px]">
             <div className="flex-none max-w-2xl flex flex-col">
@@ -346,6 +388,10 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+
+      <div className={isAnyModalOpen ? 'blur-md brightness-50 transition-all' : ''}>
+        <Footer />
+      </div>
 
       {isBudgetModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
