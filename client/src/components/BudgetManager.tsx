@@ -73,7 +73,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose }) => {
       <div className="flex justify-between items-center mb-8 pr-8">
         <div>
           <h2 className="text-2xl font-medium text-white">Budget Configuration</h2>
-          <p className="text-gray-500 text-sm mt-1">Set your monthly spending limits.</p>
+          <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">Set your monthly spending limits.</p>
         </div>
         <button 
           onClick={handleSave} 

@@ -8,6 +8,15 @@ const router = Router();
 const userContainer = getContainer("Users");
 const transContainer = getContainer("Transactions");
 
+router.get('/profile', (req, res) => {
+  // passport.js populates req.user from the session
+  if (req.isAuthenticated() && req.user) {
+    res.json(req.user);
+  } else {
+    res.status(401).json({ message: "Not authenticated" });
+  }
+});
+
 router.get('/finance-data', auth, (async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user as any;

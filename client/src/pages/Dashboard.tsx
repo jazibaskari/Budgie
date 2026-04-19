@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Lock, Settings, RefreshCcw, PieChart, AlertCircle, CheckCircle, X } from 'lucide-react';
+import { LogOut, Lock, RefreshCcw, PieChart, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useFinance } from '../hooks/useFinance'; 
 import ReviewModal from '../components/ReviewModal';
 import BudgetManager from '../components/BudgetManager';
@@ -10,9 +10,12 @@ import HighestExpenses from '../components/HighestExpenses';
 import type { Transaction } from '../types/finance'; 
 import api from '../api/axiosConfig';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
-import MiniCalendar from '../components/MiniCalendar';
+// import MiniCalendar from '../components/MiniCalendar';
 import TotalExpenses from '../components/TotalExpenses';
 import Footer from '../components/Footer';
+// import { 
+// Bird
+// } from 'lucide-react';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -28,7 +31,6 @@ export default function Dashboard() {
   const { transactions, budgets, currentMonth, isLoading, setTransactions } = useFinance();
   const displayMonth = currentMonth ? currentMonth.split(' ')[0] : '';
   const [drafts, setDrafts] = useState<any[] | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false); 
@@ -46,12 +48,17 @@ export default function Dashboard() {
     setCurrentPage(1);
   }, [transactions]);
 
+  // Ensuring 
+
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await api.get('/user/profile');
-        if (response.data && response.data.name) {
-          const firstName = response.data.name.split(' ')[0];
+        const response = await api.get('/user/profile', { withCredentials: true });
+        const userData = response.data?.user || response.data;
+        const fullName = userData?.name || userData?.displayName || userData?.givenName || userData?.firstName || userData?.email;
+
+        if (fullName) {
+          const firstName = fullName.split(' ')[0];
           setUserName(firstName);
         }
       } catch (err) {
@@ -163,7 +170,7 @@ export default function Dashboard() {
 
   if (isLoading) return <div className="fixed inset-0 flex items-center justify-center bg-app-bg text-emerald-500">Loading...</div>;
 
-  const isAnyModalOpen = !!drafts || isSettingsOpen || isBudgetModalOpen;
+  const isAnyModalOpen = !!drafts || isBudgetModalOpen;
 
   return (
     <>
@@ -221,8 +228,10 @@ export default function Dashboard() {
             )}
           </div>
           <div className="flex items-center gap-6">
-            <button onClick={() => setIsSettingsOpen(true)} className="text-gray-400 hover:text-white transition-colors"><Settings size={16} /></button>
-            <button onClick={() => window.location.href = 'http://localhost:5000/api/auth/logout'} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
+            <button onClick={() => {
+      localStorage.clear(); 
+      window.location.href = 'http://localhost:5000/api/auth/logout';
+    }} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
           </div>
         </div>
       </nav>
@@ -241,7 +250,7 @@ export default function Dashboard() {
                 Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
               </p>
               <div className="flex gap-4 mt-auto">
-                <button onClick={syncMonzoData} disabled={isSyncing} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-black rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
+                <button onClick={syncMonzoData} disabled={isSyncing} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
                   {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
                   {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
                 </button>
@@ -252,7 +261,8 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex-1 flex justify-end items-center">
-              <MiniCalendar />
+            {/* <Bird size={350} strokeWidth={0.5} className="-scale-x-100" /> */}
+              {/* <MiniCalendar /> */}
             </div>
           </div>
         </header>
