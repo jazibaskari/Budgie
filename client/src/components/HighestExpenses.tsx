@@ -2,132 +2,80 @@ import React, { useMemo } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 import type { Transaction } from '../types/finance';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
-const CustomTooltip = ({ active, payload, totalBudget }: any) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    if (data.name === 'Spent') {
-      return (
-        <div className="bg-[#000] border border-[#333] p-3 rounded-xl text-xs text-white shadow-2xl">
-          <span className="font-medium">Spent:</span> £{data.value.toFixed(2)} out of £{totalBudget.toFixed(2)}
-        </div>
-      );
-    } else {
-      return (
-        <div className="bg-[#000] border border-[#333] p-3 rounded-xl text-xs text-white shadow-2xl">
-          <span className="font-medium">Total Budget:</span> £{totalBudget.toFixed(2)}
-        </div>
-      );
-    }
-  }
-  return null;
-};
+interface HighestExpensesProps {
+  showOnlyTotal?: boolean;
+}
 
-const HighestExpenses: React.FC = () => {
-  const { transactions, budgets, currentMonth } = useFinance();
+const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
+  const { transactions } = useFinance();
 
-  const topExpenses = useMemo(() => {
+  const topCategories = useMemo(() => {
     const categoryTotals: Record<string, number> = {};
-
     transactions.forEach((t: Transaction) => {
-      const categoryLabel = ALL_CATEGORIES.find(
-        c => c.value === t.category || c.label.toLowerCase() === t.category.toLowerCase()
-      )?.label || t.category;
-
-      if (!categoryTotals[categoryLabel]) {
-        categoryTotals[categoryLabel] = 0;
-      }
-      categoryTotals[categoryLabel] += Math.abs(t.amount / 100);
+      const categoryLabel = ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category;
+      categoryTotals[categoryLabel] = (categoryTotals[categoryLabel] || 0) + Math.abs(t.amount / 100);
     });
-
     return Object.entries(categoryTotals)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5); 
+      .slice(0, 4); 
   }, [transactions]);
 
-  const { totalSpent, totalBudget, isOverBudget } = useMemo(() => {
-    const spent = transactions.reduce((sum, t) => sum + Math.abs(t.amount / 100), 0);
-    const budget = Object.values(budgets || {}).reduce((sum, val) => sum + (Number(val) || 0), 0);
-    return { 
-      totalSpent: spent, 
-      totalBudget: budget, 
-      isOverBudget: spent > budget 
-    };
-  }, [transactions, budgets]);
-
-  const pieData = useMemo(() => [
-    { name: 'Spent', value: totalSpent },
-    { name: 'Remaining', value: Math.max(0, totalBudget - totalSpent) }
-  ], [totalSpent, totalBudget]);
-
-  const displayMonth = currentMonth ? currentMonth.split(' ')[0] : '';
+  const topMerchants = useMemo(() => {
+    const merchantTotals: Record<string, number> = {};
+    transactions.forEach((t: Transaction) => {
+      const name = (typeof t.merchant === 'object' && t.merchant?.name) || t.description;
+      merchantTotals[name] = (merchantTotals[name] || 0) + Math.abs(t.amount / 100);
+    });
+    return Object.entries(merchantTotals)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 4);
+  }, [transactions]);
 
   return (
-    <>
-    
-      <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-xl flex flex-col flex-1">
-      <h1 className="text-2xl font-medium">Highest Expenses</h1>
-        <div className="flex-1 flex flex-col justify-between">
-          
-          <div className="flex flex-wrap gap-3">
-            {topExpenses.map((expense, index) => (
+    <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-xl flex-1 justify-center">
+      <h1 className="text-2xl font-medium mb-8">Highest Expenses</h1>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-xl font-medium mb-4 text-white">Categories</h2>
+          <div className="flex flex-wrap gap-2">
+          <span className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
+          You've spent the most on <span className="text-white font-bold">{topCategories[0]?.name}</span> this month. Try to identify potential savings opportunities here.
+        </span>
+            {topCategories.map((expense, index) => (
               <div 
                 key={expense.name} 
-                className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] px-4 py-2 rounded-lg"
+                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
               >
                 <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
                 <span className="text-white text-xs font-medium">{expense.name}</span>
-                <span className="text-emerald-500 text-xs font-bold">£{expense.amount.toFixed(2)}</span>
+                <span className="text-emerald-500 text-xs font-bold">£{expense.amount.toFixed(0)}</span>
               </div>
             ))}
-            {topExpenses.length === 0 && (
-              <span className="text-gray-500 text-xs">No transactions recorded.</span>
-            )}
           </div>
-
-          <div className="flex flex-row items-center gap-8 border-t border-[#262626] mt-[20px] pt-4">
-            <div className="w-[120px] h-[70px] relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="100%"
-                    startAngle={180}
-                    endAngle={0}
-                    innerRadius={40}
-                    outerRadius={55}
-                    paddingAngle={0}
-                    dataKey="value"
-                    stroke="none"
-                    isAnimationActive={true}
-                  >
-                    <Cell fill={isOverBudget ? '#ef4444' : '#10b981'} />
-                    <Cell fill="#262626" />
-                  </Pie>
-                  <Tooltip 
-                    content={<CustomTooltip totalBudget={totalBudget} />} 
-                    cursor={{fill: 'transparent'}} 
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-4xl md:text-5xl font-bold text-white tracking-tight">
-                £{totalSpent.toFixed(0)}
-              </span>
-              <span className="text-[#bfc0c0] font-medium leading-[1.2] ml-2 text-sm">
-                Total <span className="text-[white] font-medium text-sm">{displayMonth} </span><br /> Expenses
-              </span>
-            </div>
+        </div>
+        <div>
+          <h2 className="text-xl font-medium mb-3 text-white mb-4">Merchants</h2>
+          <div className="flex flex-wrap gap-2">
+          <span className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
+          You've spent the most at <span className="text-white font-bold">{topMerchants[0]?.name}</span> this month. Are there better-value alternatives available with similar merchants?
+        </span>
+            {topMerchants.map((merchant, index) => (
+              <div 
+                key={merchant.name} 
+                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
+              >
+                <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
+                <span className="text-white text-xs font-medium truncate max-w-[100px]">{merchant.name}</span>
+                <span className="text-emerald-500 text-xs font-bold">£{merchant.amount.toFixed(0)}</span>
+              </div>
+            ))}
           </div>
-          
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
