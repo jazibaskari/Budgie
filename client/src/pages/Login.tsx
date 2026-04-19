@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Login = () => {
   const handleLogin = () => {
     window.location.href = 'http://localhost:5000/api/auth/google';
@@ -18,7 +16,7 @@ const Login = () => {
         <div className="max-w-md w-full animate-in fade-in slide-in-from-right duration-1000">
           <div className="mb-10">
             <h2 className="text-3xl font-medium text-white mb-6">
-              You can't measure what you don't track<span className="text-emerald-500">.</span>
+              You can't manage what you don't measure<span className="text-emerald-500">.</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed mb-8">
               Take control of your finances with <span className="text-white font-medium">real-time sync</span> and <span className="text-white font-medium">automated insights</span>. 

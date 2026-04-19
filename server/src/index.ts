@@ -96,7 +96,10 @@ const startServer = async () => {
     app.use('/api/user', userRoutes);
     app.use('/api/monzo', transactionRoutes); 
 
-    app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+    app.get('/api/auth/google', passport.authenticate('google', { 
+      scope: ['profile', 'email'],
+      prompt: 'select_account' 
+    }));
     
     app.get('/api/auth/google/callback', 
       passport.authenticate('google', { failureRedirect: 'http://localhost:5174/login' }),
@@ -108,8 +111,16 @@ const startServer = async () => {
     app.get('/api/auth/logout', (req, res, next) => {
       req.logout((err) => {
         if (err) return next(err);
-        req.session.destroy(() => {
-          res.clearCookie('budgie_sid');
+    
+        req.session.destroy((err) => {
+          if (err) console.error("Session destruction error:", err);
+          
+          res.clearCookie('budgie_sid', { 
+            path: '/', 
+            domain: 'localhost', 
+            httpOnly: true 
+          });
+          
           res.redirect('http://localhost:5174/login');
         });
       });
