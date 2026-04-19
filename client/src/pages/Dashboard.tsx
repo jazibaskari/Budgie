@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Lock, Settings, RefreshCcw, PieChart, AlertCircle, CheckCircle, X, WalletCards, SquareUser, HandCoins, CalendarDays } from 'lucide-react';
+import { LogOut, Lock, Settings, RefreshCcw, PieChart, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { useFinance } from '../hooks/useFinance'; 
 import ReviewModal from '../components/ReviewModal';
 import BudgetManager from '../components/BudgetManager';
@@ -10,7 +10,8 @@ import HighestExpenses from '../components/HighestExpenses';
 import type { Transaction } from '../types/finance'; 
 import api from '../api/axiosConfig';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
-
+import MiniCalendar from '../components/MiniCalendar';
+import TotalExpenses from '../components/TotalExpenses';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -23,7 +24,7 @@ const LockedSection = ({ title, message, id }: { title: string, message: string,
 );
 
 export default function Dashboard() {
-  const { transactions, budgets, currentMonth, isLoading, fetchFinanceData, setTransactions } = useFinance();
+  const { transactions, budgets, currentMonth, isLoading, setTransactions } = useFinance();
   const displayMonth = currentMonth ? currentMonth.split(' ')[0] : '';
   const [drafts, setDrafts] = useState<any[] | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -33,8 +34,15 @@ export default function Dashboard() {
   const [userName, setUserName] = useState('');
   const [alert, setAlert] = useState<{ type: 'error' | 'success', title: string, message: string, isAuthError?: boolean } | null>(null);
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
+
   const monzoDataFetched = transactions.length > 0;
   const hasBudgetsSet = budgets && Object.values(budgets).some(val => Number(val) > 0);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [transactions]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -84,15 +92,13 @@ export default function Dashboard() {
       setAlert(null); 
       setIsAuthorized(true); 
     } catch (err: any) {
-      const monzoCode = err.response?.data?.code;
       const status = err.response?.status;
-  
-      if (status === 403 || status === 400 || monzoCode?.includes('permissions')) {
+      if (status === 403 || status === 400) {
         setIsAuthorized(false); 
         setAlert({
           type: 'error',
           title: 'Approval Required',
-          message: 'Please check your Monzo app and approve the request. Once approved, click "Try Again".',
+          message: 'Please check your Monzo app and approve the request.',
           isAuthError: true
         });
       } else if (status === 401) {
@@ -112,6 +118,29 @@ export default function Dashboard() {
       await api.post('/monzo/confirm', { transactions: confirmedData });
       setAlert({ type: 'success', title: 'Transactions Saved', message: 'Reviewed and saved successfully.' });
     } catch (err) { console.error(err); }
+  };
+
+  const totalPages = Math.ceil(transactions.length / itemsPerPage);
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTransactions = transactions.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePreviousPage = () => setCurrentPage((prev) => Math.max(1, prev - 1));
+  const handleNextPage = () => setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
   };
 
   if (isLoading) return <div className="fixed inset-0 flex items-center justify-center bg-app-bg text-emerald-500">Loading...</div>;
@@ -157,47 +186,35 @@ export default function Dashboard() {
       </nav>
 
       <main className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${isAnyModalOpen ? 'blur-md brightness-50' : ''}`}>
-      <header className="mb-12 border-b border-[#222] pb-8">
-  <div className="flex flex-row items-stretch gap-[20px]">
-    <div className="flex-none max-w-2xl flex flex-col">
-      <h1 className="text-5xl font-bold text-white leading-none">
-        {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
-      </h1>
-      <p className="text-gray-300 font- text-4xl mb-2">
-        <span className="text-emerald-500">{currentMonth}</span>
-      </p> 
-      <p className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
-        Simply click 'Sync Monzo' and authenticate with Monzo via e-mail and your mobile device. Next, hit 'Configure Budget' to set your budget for this month. These steps help ensure your Monzo transaction history is up-to-date, and your budgets are set, allowing you to track your spending effectively. Easily monitor your spending habits with the resulting inights, and filter data however you'd like.
-      </p>
-      
-      <div className="flex gap-4 mt-auto">
-        <button 
-          onClick={syncMonzoData} 
-          disabled={isSyncing} 
-          className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-black rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all"
-        >
-          {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
-          {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
-        </button>
-        <button 
-          onClick={() => setIsBudgetModalOpen(true)} 
-          className="flex items-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all"
-        >
-          <PieChart size={16} />
-          Configure Budget
-        </button>
-      </div>
-    </div>
-    <div className="flex-1 flex justify-end items-stretch overflow-hidden">
-      <div className="grid grid-cols-2 gap-6 h-full text-white-500 opacity-[0.8]">
-        <WalletCards className="h-full w-auto" strokeWidth={1} />
-<HandCoins className="h-full w-auto" strokeWidth={1} />
-<SquareUser className="h-full w-auto" strokeWidth={1} />
-<CalendarDays className="h-full w-auto" strokeWidth={1} />
-      </div>
-    </div>
-  </div>
-</header>
+        <header className="mb-12 pb-8">
+          <div className="flex flex-row items-stretch gap-[20px]">
+            <div className="flex-none max-w-2xl flex flex-col">
+              <h1 className="text-5xl font-bold text-white leading-none">
+                {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
+              </h1>
+              <p className="text-gray-300 font- text-4xl mb-2">
+                <span className="text-emerald-500">{currentMonth}</span>
+              </p> 
+              <p className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
+                Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
+              </p>
+              <div className="flex gap-4 mt-auto">
+                <button onClick={syncMonzoData} disabled={isSyncing} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-black rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
+                  {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
+                  {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
+                </button>
+                <button onClick={() => setIsBudgetModalOpen(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all">
+                  <PieChart size={16} />
+                  Configure Budget
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 flex justify-end items-center">
+              <MiniCalendar />
+            </div>
+          </div>
+        </header>
+
         {!hasBudgetsSet ? (
           <LockedSection title="Dashboard Locked" message="Please set your monthly budgets to unlock tracking." />
         ) : !monzoDataFetched ? (
@@ -207,41 +224,123 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="animate-in fade-in duration-700">
-            <section id="transactions" className="bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl mb-8">
-              <div className="p-6 border-b border-[#222] bg-[#161616]"><h2 className="text-xl font-medium">{displayMonth}'s Transactions</h2></div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-[#1A1A1A] text-[#666]">
-                      <th className="p-5 font-medium text-[10px]">Date</th>
-                      <th className="p-5 font-medium text-[10px]">Merchant</th>
-                      <th className="p-5 font-medium text-[10px]">Category</th>
-                      <th className="p-5 font-medium text-[10px] text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.map((t: Transaction) => (
-                      <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616]">
-                        <td className="p-5 text-sm text-gray-500">{new Date(t.created).toLocaleDateString()}</td>
-                        <td className="p-5 text-sm font-medium text-white">{(typeof t.merchant === 'object' && t.merchant?.name) || t.description}</td>
-                        <td className="p-5 text-sm">
-                          <span className="px-3 py-1 rounded-md bg-[#222] text-gray-300 text-[11px] border border-[#333]">
-                            {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
-                          </span>
-                        </td>
-                        <td className="p-5 text-sm text-right font-medium text-white">£{(Math.abs(t.amount) / 100).toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8 items-stretch">
+              
+              <div className="lg:col-span-5 bg-[#141414] border border-[#262626] rounded-3xl shadow-xl flex flex-col overflow-hidden">
+                <TotalExpenses />
               </div>
-            </section>
+
+              <section id="transactions" className="lg:col-span-7 bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between">
+                <div>
+                  <div className="p-6 border-b border-[#222] bg-[#161616]">
+                    <h1 className="text-2xl font-medium">{displayMonth}'s Transactions</h1>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="bg-[#1A1A1A] text-white">
+                          <th className="p-5 font-regular text-sm">Date</th>
+                          <th className="p-5 font-regular text-sm">Merchant</th>
+                          <th className="p-5 font-regular text-sm">Category</th>
+                          <th className="p-5 font-regular text-sm text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentTransactions.map((t: Transaction) => (
+                          <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616]">
+                            <td className="p-5 text-sm text-gray-500 font-regular">{new Date(t.created).toLocaleDateString()}</td>
+                            <td className="p-5 text-sm font-regular text-white">{(typeof t.merchant === 'object' && t.merchant?.name) || t.description}</td>
+                            <td className="p-5 text-sm">
+                              <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-white text-sm font-regular">
+                                {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
+                              </span>
+                            </td>
+                            <td className="p-5 text-sm text-right font-regular text-white">£{(Math.abs(t.amount) / 100).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between border-t border-[#222] px-4 py-3 sm:px-6 mt-auto">
+                  <div className="flex flex-1 justify-between sm:hidden">
+                    <button 
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <button 
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages || totalPages === 0}
+                      className="relative ml-3 inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400">
+                        Showing <span className="font-medium text-white">{transactions.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-medium text-white">{Math.min(indexOfLastItem, transactions.length)}</span> of <span className="font-medium text-white">{transactions.length}</span> results
+                      </p>
+                    </div>
+                    <div>
+                      <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                        <button 
+                          onClick={handlePreviousPage}
+                          disabled={currentPage === 1}
+                          className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
+                            <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                        
+                        {getPageNumbers().map((page, index) => (
+                          page === '...' ? (
+                            <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-500 border border-[#222] bg-app-bg focus:outline-offset-0">
+                              ...
+                            </span>
+                          ) : (
+                            <button
+                              key={`page-${page}`}
+                              onClick={() => setCurrentPage(page as number)}
+                              aria-current={currentPage === page ? "page" : undefined}
+                              className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0  ${
+                                currentPage === page
+                                  ? 'z-10 bg-[#161616] text-black bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500'
+                                  : 'text-gray-300 hover:bg-[#161616] hidden md:inline-flex'
+                              }`}
+                            >
+                              {page}
+                            </button>
+                          )
+                        ))}
+
+                        <button 
+                          onClick={handleNextPage}
+                          disabled={currentPage === totalPages || totalPages === 0}
+                          className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
+                        >
+                          <span className="sr-only">Next</span>
+                          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
+                            <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
             <div id="metrics" className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
               <div className="lg:col-span-5"><CategoryGrid /></div>
               <div className="lg:col-span-7 flex flex-col gap-8">
+                <HighestExpenses showOnlyTotal={true}/>
                 <CategorisedMonthlySpend />
                 <SpendingOverTime />
-                <HighestExpenses />
               </div>
             </div>
           </div>
@@ -251,21 +350,13 @@ export default function Dashboard() {
       {isBudgetModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
           <div className="w-full max-w-4xl">
-            <BudgetManager 
-              key={JSON.stringify(budgets)} 
-              onClose={() => setIsBudgetModalOpen(false)} 
-            />
+            <BudgetManager key={JSON.stringify(budgets)} onClose={() => setIsBudgetModalOpen(false)} />
           </div>
         </div>
       )}
 
       {drafts && (
-        <ReviewModal 
-          key={JSON.stringify(drafts)}
-          transactions={drafts} 
-          onClose={() => setDrafts(null)} 
-          onConfirm={onConfirmSuccess}  
-        />
+        <ReviewModal key={JSON.stringify(drafts)} transactions={drafts} onClose={() => setDrafts(null)} onConfirm={onConfirmSuccess} />
       )}
     </>
   );
