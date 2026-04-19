@@ -12,6 +12,7 @@ import api from '../api/axiosConfig';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 import MiniCalendar from '../components/MiniCalendar';
 import TotalExpenses from '../components/TotalExpenses';
+import Footer from '../components/Footer';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -387,6 +388,10 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+
+      <div className={isAnyModalOpen ? 'blur-md brightness-50 transition-all' : ''}>
+        <Footer />
+      </div>
 
       {isBudgetModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
