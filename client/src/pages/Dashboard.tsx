@@ -9,6 +9,7 @@ import SpendingOverTime from '../components/SpendingOverTime';
 import HighestExpenses from '../components/HighestExpenses';
 import type { Transaction } from '../types/finance'; 
 import api from '../api/axiosConfig';
+import TextAnimation from "../components/AnimatedText";
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 // import MiniCalendar from '../components/MiniCalendar';
 import TotalExpenses from '../components/TotalExpenses';
@@ -16,6 +17,8 @@ import Footer from '../components/Footer';
 // import { 
 // Bird
 // } from 'lucide-react';
+
+
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -168,7 +171,11 @@ export default function Dashboard() {
     return pages;
   };
 
-  if (isLoading) return <div className="fixed inset-0 flex items-center justify-center bg-app-bg text-emerald-500">Loading...</div>;
+  if (isLoading) return     <div className="fixed inset-0 flex items-center justify-center bg-app-bg">
+  <svg className="w-10 h-10 animate-spin fill-emerald-500" viewBox="0 0 100 101" fill="none">
+    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+  </svg>
+</div>;
 
   const isAnyModalOpen = !!drafts || isBudgetModalOpen;
 
@@ -240,12 +247,16 @@ export default function Dashboard() {
         <header className="mb-12 pb-8">
           <div className="flex flex-row items-stretch gap-[20px]">
             <div className="flex-none max-w-2xl flex flex-col">
+            <TextAnimation duration={0.8}>
               <h1 className="text-5xl font-bold text-white leading-none">
                 {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
               </h1>
+              </TextAnimation>
+              <TextAnimation duration={1.1} >
               <p className="text-gray-300 font- text-4xl mb-2">
                 <span className="text-emerald-500">{currentMonth}</span>
               </p> 
+              </TextAnimation>
               <p className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
                 Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
               </p>
@@ -303,7 +314,7 @@ export default function Dashboard() {
                             <td className="p-5 text-sm text-gray-500 font-regular">{new Date(t.created).toLocaleDateString()}</td>
                             <td className="p-5 text-sm font-regular text-white">{(typeof t.merchant === 'object' && t.merchant?.name) || t.description}</td>
                             <td className="p-5 text-sm">
-                              <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-white text-sm font-regular">
+                            <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-emerald-500 text-sm font-regular">
                                 {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
                               </span>
                             </td>
@@ -362,7 +373,7 @@ export default function Dashboard() {
                               aria-current={currentPage === page ? "page" : undefined}
                               className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0  ${
                                 currentPage === page
-                                  ? 'z-10 bg-[#161616] text-black bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500'
+                                  ? 'z-10 bg-[#161616] text-white bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500'
                                   : 'text-gray-300 hover:bg-[#161616] hidden md:inline-flex'
                               }`}
                             >
