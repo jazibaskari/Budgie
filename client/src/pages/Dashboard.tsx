@@ -293,10 +293,21 @@ export default function Dashboard() {
             )}
           </div>
           <div className="flex items-center gap-6">
-            <button onClick={() => {
-              localStorage.clear(); 
-              window.location.href = 'http://localhost:5000/api/auth/logout';
-            }} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
+          <button 
+  onClick={() => {
+    localStorage.clear(); 
+    
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      window.location.href = window.location.origin; 
+    } else {
+      const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      window.location.href = `${backendUrl}/auth/logout`;
+    }
+  }} 
+  className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"
+>
+  <LogOut size={16} /> Logout
+</button>
           </div>
         </div>
       </nav>
