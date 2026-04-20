@@ -19,9 +19,9 @@ const Login = () => {
               You can't manage what you don't measure<span className="text-emerald-500">.</span>
             </h2>
             <p className="text-gray-400 text-lg leading-relaxed mb-8">
-              Take control of your finances with <span className="text-white font-medium">real-time sync</span> and <span className="text-white font-medium">automated insights</span>. 
+              Take control of your finances with <span className="text-white font-regular">real-time sync</span> and <span className="text-white font-regular">automated insights</span>. 
               Simply authenticate with your Monzo account to sync your transactions, 
-              set your monthly goals, and unlock a <span className="text-white font-medium">bird's-eye view</span> of your spending habits.
+              set your monthly goals, and unlock a <span className="text-white font-regular">bird's-eye view</span> of your spending habits.
             </p>
           </div>
 

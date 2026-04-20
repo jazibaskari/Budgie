@@ -18,7 +18,7 @@ const DemoLogout = () => {
                 You have successfully logged out<span className="text-emerald-500">.</span>
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                Thanks for testing Budgy's <span className="text-white font-medium">'Demo Mode'</span>. Feel free to clone the <span className="text-white font-medium">'Budgy'</span> repository and create your own version. 
+                Thanks for testing Budgy's <span className="text-white font-regular">'Demo Mode'</span>. Feel free to clone the <span className="text-white font-regular">'Budgy'</span> repository and create your own version. 
               </p>
             </div>
   
