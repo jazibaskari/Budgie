@@ -17,7 +17,6 @@ interface BudgetManagerProps {
 const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, onAlert}) => {
   const { budgets, fetchFinanceData, setBudgets } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
 
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>(() => {
     const initial: Record<string, string | number> = {};
@@ -34,75 +33,76 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
   };
   
   const handleSave = async () => {
-    const hasEmptyFields = Object.values(localBudgets).some(v => v === "" || v === null);
-    if (hasEmptyFields) {
-      setShowErrors(true);
-      onAlert('Incomplete Fields', 'Please fill all budget fields before saving.');
-      return;
-    }
-  
     setIsSaving(true);
-
-    
-    const sanitizedBudgets = Object.fromEntries(
-      Object.entries(localBudgets).map(([k, v]) => [k, Number(v)])
-    );
-
-    if (import.meta.env.VITE_DEMO_MODE === 'true') {
-      setTimeout(() => {
-        setBudgets(sanitizedBudgets); 
-        onSaveSuccess();
-        onClose();
-      }, 800);
-      return;
-    }
-
     try {
-      await api.post('/user/update-budgets', { budgets: sanitizedBudgets });
+      const payload: Record<string, number> = {};
+      Object.entries(localBudgets).forEach(([cat, val]) => {
+        payload[cat] = val === "" ? 0 : Number(val);
+      });
+
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        setBudgets(payload);
+        setTimeout(() => {
+          onSaveSuccess();
+          onClose();
+        }, 500);
+        return;
+      }
+
+      await api.post('/user/budgets', { budgets: payload }, { withCredentials: true });
       await fetchFinanceData();
       onSaveSuccess();
       onClose();
-    } catch {
-      onAlert('Save Failed', 'Could not update budgets.');
+    } catch (err) {
+      onAlert('Error', 'Failed to save budget settings.');
+    } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="bg-[#111111] border border-[#222222] rounded-[32px] p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white">
+    <div className="bg-[#111111] border border-[#222] rounded-[32px] w-full max-w-4xl relative max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      <button 
+        onClick={onClose}
+        className="absolute top-6 right-6 p-2 text-gray-500 hover:text-white transition-colors z-10"
+        aria-label="Close"
+      >
         <X size={24} />
       </button>
-      <div className="flex justify-between items-center mb-8 pr-8">
-        <div>
-          <h2 className="text-2xl font-medium text-white">Budget Configuration</h2>
-          <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">Set your monthly spending limits.</p>
+      <div className="p-8 md:p-10 pb-0">
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Configure Budget</h2>
+        <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">
+          Set your monthly spending limits for each category.
+        </p>
+      </div>
+      <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.entries(localBudgets).map(([category, amount]) => (
+            <div key={category} className="bg-[#181818] border border-[#262626] p-4 rounded-2xl flex flex-col gap-2">
+              <label className="text-sm font-regular text-gray-500">{category}</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">£</span>
+                <input
+                  type="text"
+                  value={amount}
+                  placeholder="0.00"
+                  onChange={(e) => handleUpdateBudget(category, e.target.value)}
+                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-xl py-3 pl-8 pr-4 text-white outline-none focus:border-emerald-500/50 transition-all text-base"
+                />
+              </div>
+            </div>
+          ))}
         </div>
+      </div>
+      <div className="p-6 bg-[#161616] border-t border-[#222] flex justify-end gap-4">
         <button 
           onClick={handleSave} 
           disabled={isSaving} 
-          className="flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-50"
+          className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-400 transition-all disabled:opacity-50"
         >
-          <Save size={18} /> {isSaving ? 'Saving...' : 'Save Configuration'}
+          <Save size={18} /> 
+          {isSaving ? 'Saving...' : 'Save Configuration'}
         </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {Object.entries(localBudgets).map(([category, amount]) => (
-          <div key={category} className="bg-[#181818] border border-[#262626] p-4 rounded-2xl flex flex-col gap-2">
-            <label className="text-sm font-regular text-gray-500">{category}</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">£</span>
-              <input
-                type="text"
-                value={amount}
-                placeholder="0.00"
-                onChange={(e) => handleUpdateBudget(category, e.target.value)}
-                className={`w-full bg-[#0A0A0A] border rounded-xl py-3 pl-8 pr-4 text-white outline-none focus:border-emerald-500 transition-all ${showErrors && (amount === "" || amount === null) ? 'border-red-500/60' : 'border-[#333]'}`}
-              />
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   );
