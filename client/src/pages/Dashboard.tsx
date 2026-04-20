@@ -16,7 +16,7 @@ import Footer from '../components/Footer';
 import { DUMMY_TRANSACTIONS } from '../utils/mockData';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
-  <div id={id} className="flex flex-col items-center justify-center p-32 rounded-[40px] bg-[#1a1a1a] text-center mb-8">
+  <div id={id} className="flex flex-col items-center justify-center p-12 md:p-32 rounded-[40px] bg-[#1a1a1a] text-center mb-8">
     <div className="p-6 bg-[#262626] rounded-full mb-6">
       <Lock size={48} className="text-white-500" strokeWidth={1}/>
     </div>
@@ -314,26 +314,26 @@ export default function Dashboard() {
       <main id="home" className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${isAnyModalOpen ? 'blur-md brightness-50' : ''}`}>
         <header className="mb-12 pb-8">
           <div className="flex flex-row items-stretch gap-[20px]">
-            <div className="flex-none max-w-2xl flex flex-col">
+            <div className="w-full max-w-2xl flex flex-col">
               <TextAnimation duration={0.8}>
-                <h1 className="text-5xl font-bold text-white leading-none">
+                <h1 className="text-4xl md:text-5xl font-bold text-white leading-none">
                   {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
                 </h1>
               </TextAnimation>
               <TextAnimation duration={1.1} >
-                <p className="text-gray-300 font-regular text-4xl mb-2">
+                <p className="text-gray-300 font-regular text-3xl md:text-4xl mb-2">
                   <span className="text-emerald-500">{currentMonth}</span>
                 </p> 
               </TextAnimation>
-              <p className="text-gray-300 font-regular text-md mb-4 pt-6 leading-relaxed">
+              <p className="whitespace-normal break-words text-gray-300 font-regular text-base md:text-md mb-4 pt-6 leading-relaxed">
                 Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
               </p>
-              <div className="flex gap-4 mt-auto">
-                <button onClick={syncMonzoData} disabled={isSyncing} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
+              <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <button onClick={syncMonzoData} disabled={isSyncing} className="w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
                   {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
                   {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
                 </button>
-                <button onClick={() => setIsBudgetModalOpen(true)} className="flex items-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all">
+                <button onClick={() => setIsBudgetModalOpen(true)} className=" w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all">
                   <PieChart size={16} />
                   Configure Budget
                 </button>
@@ -362,13 +362,13 @@ export default function Dashboard() {
       <h1 className="text-2xl font-medium">{displayMonth}'s Transactions</h1>
     </div>
     <div className="overflow-x-auto">
-      <table className="w-full text-left table-fixed">
+      <table className="w-full text-left table-fixed min-w-[500px]">
         <thead>
           <tr className="bg-[#161616] text-white">
-            <th scope="col" className="p-5 font-regular text-sm">Date</th>
+            <th scope="col" className="p-5 font-regular text-sm w-[120px]">Date</th>
             <th scope="col" className="p-5 font-regular text-sm">Merchant</th>
-            <th scope="col" className="p-5 font-regular text-sm">Category</th>
-            <th scope="col" className="p-5 font-regular text-sm text-right">Amount</th>
+            <th scope="col" className="p-5 font-regular text-sm w-[140px]">Category</th>
+            <th scope="col" className="p-5 font-regular text-sm text-right w-[100px]">Amount</th>
           </tr>
         </thead>
         <tbody>
