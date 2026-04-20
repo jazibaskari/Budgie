@@ -298,7 +298,7 @@ export default function Dashboard() {
     localStorage.clear(); 
     
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
-      window.location.href = window.location.origin; 
+      window.location.href = '/logout'; 
     } else {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       window.location.href = `${backendUrl}/auth/logout`;
