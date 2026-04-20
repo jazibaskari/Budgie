@@ -9,7 +9,6 @@ const userContainer = getContainer("Users");
 const transContainer = getContainer("Transactions");
 
 router.get('/profile', (req, res) => {
-  // passport.js populates req.user from the session
   if (req.isAuthenticated() && req.user) {
     res.json(req.user);
   } else {
@@ -21,16 +20,10 @@ router.get('/finance-data', auth, (async (req: AuthRequest, res: Response) => {
   try {
     const user = req.user as any;
     if (!user) return res.status(401).json({ message: "Unauthorized" });
-
-    const month = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-    
     const { resources: transactions } = await transContainer.items
       .query({
-        query: "SELECT * FROM c WHERE c.userId = @gid AND c.month = @month",
-        parameters: [
-          { name: "@gid", value: user.googleId }, 
-          { name: "@month", value: month }
-        ]
+        query: "SELECT * FROM c WHERE c.userId = @gid",
+        parameters: [{ name: "@gid", value: user.googleId }]
       })
       .fetchAll();
 

@@ -10,12 +10,13 @@ const DEFAULT_CATEGORIES = [
 
 interface BudgetManagerProps {
   onClose: () => void;
+  onSaveSuccess: () => void; 
 }
 
-const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose }) => {
+const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess }) => {
   const { budgets, fetchFinanceData } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
-  const [alert, setAlert] = useState<{ type: 'error' | 'success', title: string, message: string } | null>(null);
+  const [localAlert, setLocalAlert] = useState<{ type: 'error', title: string, message: string } | null>(null);
   const [showErrors, setShowErrors] = useState(false);
 
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>(() => {
@@ -36,20 +37,22 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose }) => {
     const hasEmptyFields = Object.values(localBudgets).some(v => v === "" || v === null);
     if (hasEmptyFields) {
       setShowErrors(true);
-      setAlert({ type: 'error', title: 'Attention needed', message: 'Please fill all budget fields.' });
+      setLocalAlert({ type: 'error', title: 'Attention needed', message: 'Please fill all budget fields.' });
       return;
     }
   
     setIsSaving(true);
+    setLocalAlert(null); 
     try {
       const sanitizedBudgets = Object.fromEntries(
         Object.entries(localBudgets).map(([k, v]) => [k, Number(v)])
       );
       await api.post('/user/update-budgets', { budgets: sanitizedBudgets });
       await fetchFinanceData();
+      onSaveSuccess();
       onClose();
     } catch {
-      setAlert({ type: 'error', title: 'Save Failed', message: 'Could not update budgets.' });
+      setLocalAlert({ type: 'error', title: 'Save Failed', message: 'Could not update budgets.' });
       setIsSaving(false);
     }
   };
@@ -60,12 +63,12 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose }) => {
         <X size={24} />
       </button>
 
-      {alert && (
+      {localAlert && (
         <div className="mb-6 p-4 rounded-xl border bg-[#1a0a0a] border-red-500/50 flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-red-500" />
           <div className="text-left">
-            <h3 className="text-sm font-medium text-red-200">{alert.title}</h3>
-            <p className="text-xs text-red-300">{alert.message}</p>
+            <h3 className="text-sm font-medium text-red-200">{localAlert.title}</h3>
+            <p className="text-xs text-red-300">{localAlert.message}</p>
           </div>
         </div>
       )}

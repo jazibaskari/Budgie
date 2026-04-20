@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 import type { Transaction } from '../types/finance';
+import { formatCategory } from '../utils/financeUtils';
 
 interface HighestExpensesProps {
   showOnlyTotal?: boolean;
@@ -24,10 +25,23 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
 
   const topMerchants = useMemo(() => {
     const merchantTotals: Record<string, number> = {};
+    
     transactions.forEach((t: Transaction) => {
-      const name = (typeof t.merchant === 'object' && t.merchant?.name) || t.description;
-      merchantTotals[name] = (merchantTotals[name] || 0) + Math.abs(t.amount / 100);
+      let displayName = "Unknown";
+
+      if (t.category?.toLowerCase() === 'transfers' && t.counterparty?.name) {
+        displayName = formatCategory(t.counterparty.name);
+      } 
+      else if (typeof t.merchant === 'object' && t.merchant !== null && t.merchant.name) {
+        displayName = t.merchant.name;
+      } 
+      else if (t.description) {
+        displayName = t.description;
+      }
+  
+      merchantTotals[displayName] = (merchantTotals[displayName] || 0) + Math.abs(t.amount / 100);
     });
+  
     return Object.entries(merchantTotals)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
@@ -47,7 +61,7 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
             {topCategories.map((expense, index) => (
               <div 
                 key={expense.name} 
-                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
+                className="flex items-center gap-2 bg-[#262626] border border-[#262626] mb-4 px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
               >
                 <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
                 <span className="text-white text-xs font-medium">{expense.name}</span>
@@ -68,6 +82,7 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
                 className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
               >
                 <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
+                
                 <span className="text-white text-xs font-medium truncate max-w-[100px]">{merchant.name}</span>
                 <span className="text-emerald-500 text-xs font-bold">£{merchant.amount.toFixed(0)}</span>
               </div>

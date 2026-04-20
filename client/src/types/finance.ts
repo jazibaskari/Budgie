@@ -12,6 +12,9 @@ export interface Transaction {
   created: string;
   month: string;
   description: string;
+  counterparty?: {
+    name?: string;
+  };
 }
   
   export interface FinanceContextType {

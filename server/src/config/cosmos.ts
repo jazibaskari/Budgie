@@ -16,7 +16,6 @@ export const getContainer = (containerId: string): Container => {
 export const initDatabase = async () => {
   const containers = [
     { id: "Transactions", partitionKey: { paths: ["/userId"] } },
-    { id: "monzo-auth", partitionKey: { paths: ["/id"] } },
     { id: "Users", partitionKey: { paths: ["/id"] } },
     { id: "Sessions", partitionKey: { paths: ["/id"] } } 
   ];

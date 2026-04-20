@@ -11,14 +11,9 @@ import type { Transaction } from '../types/finance';
 import api from '../api/axiosConfig';
 import TextAnimation from "../components/AnimatedText";
 import { ALL_CATEGORIES } from '../utils/financeUtils';
-// import MiniCalendar from '../components/MiniCalendar';
 import TotalExpenses from '../components/TotalExpenses';
 import Footer from '../components/Footer';
-// import { 
-// Bird
-// } from 'lucide-react';
-
-
+import { formatCategory } from '../utils/financeUtils';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
@@ -47,11 +42,17 @@ export default function Dashboard() {
   const hasBudgetsSet = budgets && Object.values(budgets).some(val => Number(val) > 0);
   const isFullyUnlocked = monzoDataFetched && hasBudgetsSet;
 
+  const handleBudgetSaveSuccess = () => {
+    setAlert({ 
+      type: 'success', 
+      title: 'Budget Saved', 
+      message: 'Budget configuration saved successfully.' 
+    });
+  };
+
   useEffect(() => {
     setCurrentPage(1);
   }, [transactions]);
-
-  // Ensuring 
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -112,13 +113,33 @@ export default function Dashboard() {
     setIsSyncing(true);
     try {
       const monzoResponse = await api.get('/monzo/transactions');
-      const processed = monzoResponse.data.map((t: any) => ({
-        ...t,
-        category: t.decline_reason ? 'Declined' : (t.category || 'Food')
-      }));
-      setDrafts(processed);
-      setAlert(null); 
+      
+      // Apply the exact filtering logic from ReviewModal here
+      const processed = monzoResponse.data
+        .filter((t: any) => {
+          if (t.category === 'Declined' || t.decline_reason) return false;
+          const isTransfer = t.category?.toLowerCase() === 'transfers';
+          return !(isTransfer && t.amount > 0);
+        })
+        .map((t: any) => ({
+          ...t,
+          category: t.category || 'Food'
+        }));
+      
       setIsAuthorized(true); 
+
+      if (processed.length === 0) {
+        setDrafts(null);
+        setAlert({ 
+          type: 'success', 
+          title: 'Up to Date', 
+          message: 'Monzo Synced successfully. You have no new transactions to review.' 
+        });
+      } else {
+        setDrafts(processed);
+        setAlert(null); 
+      }
+      
     } catch (err: any) {
       const status = err.response?.status;
       if (status === 403 || status === 400) {
@@ -171,11 +192,13 @@ export default function Dashboard() {
     return pages;
   };
 
-  if (isLoading) return     <div className="fixed inset-0 flex items-center justify-center bg-app-bg">
-  <svg className="w-10 h-10 animate-spin fill-emerald-500" viewBox="0 0 100 101" fill="none">
-    <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
-  </svg>
-</div>;
+  if (isLoading) return (
+    <div className="fixed inset-0 flex items-center justify-center bg-app-bg">
+      <svg className="w-10 h-10 animate-spin fill-emerald-500" viewBox="0 0 100 101" fill="none">
+        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/>
+      </svg>
+    </div>
+  );
 
   const isAnyModalOpen = !!drafts || isBudgetModalOpen;
 
@@ -207,16 +230,15 @@ export default function Dashboard() {
         </div>
       )}
 
-<nav className={`sticky top-0 z-50 w-full bg-app-bg/80 backdrop-blur-md border-b border-[#222] transition-all duration-300 ${isAnyModalOpen ? 'blur-sm brightness-50' : ''}`}>
+      <nav className={`sticky top-0 z-50 w-full bg-app-bg/80 backdrop-blur-md border-b border-[#222] transition-all duration-300 ${isAnyModalOpen ? 'blur-sm brightness-50' : ''}`}>
         <div className="max-w-[1126px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
           <div className="flex items-center gap-10">
-          <button 
-                  onClick={() => scrollToSection('home')}
-                  className="text-white font-bold text-lg hover:text-white transition-colors"
-                >
-                  Budgy
-                </button>
-            {/* <h2 className="text-white font-bold text-lg">Budgy</h2> */}
+            <button 
+              onClick={() => scrollToSection('home')}
+              className="text-white font-bold text-lg hover:text-white transition-colors"
+            >
+              Budgy
+            </button>
             {isFullyUnlocked && (
               <div className="hidden md:flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
                 <button 
@@ -236,9 +258,9 @@ export default function Dashboard() {
           </div>
           <div className="flex items-center gap-6">
             <button onClick={() => {
-      localStorage.clear(); 
-      window.location.href = 'http://localhost:5000/api/auth/logout';
-    }} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
+              localStorage.clear(); 
+              window.location.href = 'http://localhost:5000/api/auth/logout';
+            }} className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"><LogOut size={16} /> Logout</button>
           </div>
         </div>
       </nav>
@@ -247,17 +269,17 @@ export default function Dashboard() {
         <header className="mb-12 pb-8">
           <div className="flex flex-row items-stretch gap-[20px]">
             <div className="flex-none max-w-2xl flex flex-col">
-            <TextAnimation duration={0.8}>
-              <h1 className="text-5xl font-bold text-white leading-none">
-                {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
-              </h1>
+              <TextAnimation duration={0.8}>
+                <h1 className="text-5xl font-bold text-white leading-none">
+                  {userName ? `Welcome, ${userName}` : 'Your Dashboard'}
+                </h1>
               </TextAnimation>
               <TextAnimation duration={1.1} >
-              <p className="text-gray-300 font- text-4xl mb-2">
-                <span className="text-emerald-500">{currentMonth}</span>
-              </p> 
+                <p className="text-gray-300 font- text-4xl mb-2">
+                  <span className="text-emerald-500">{currentMonth}</span>
+                </p> 
               </TextAnimation>
-              <p className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
+              <p className="text-gray-300 font-regular text-md mb-4 pt-6 leading-relaxed">
                 Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
               </p>
               <div className="flex gap-4 mt-auto">
@@ -270,10 +292,6 @@ export default function Dashboard() {
                   Configure Budget
                 </button>
               </div>
-            </div>
-            <div className="flex-1 flex justify-end items-center">
-            {/* <Bird size={350} strokeWidth={0.5} className="-scale-x-100" /> */}
-              {/* <MiniCalendar /> */}
             </div>
           </div>
         </header>
@@ -288,7 +306,6 @@ export default function Dashboard() {
         ) : (
           <div className="animate-in fade-in duration-700">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8 items-stretch">
-              
               <div className="lg:col-span-5 bg-[#141414] border border-[#262626] rounded-3xl shadow-xl flex flex-col overflow-hidden">
                 <TotalExpenses />
               </div>
@@ -301,7 +318,7 @@ export default function Dashboard() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-left">
                       <thead>
-                        <tr className="bg-[#1A1A1A] text-white">
+                        <tr className="bg-[#262626] text-white">
                           <th className="p-5 font-regular text-sm">Date</th>
                           <th className="p-5 font-regular text-sm">Merchant</th>
                           <th className="p-5 font-regular text-sm">Category</th>
@@ -311,10 +328,14 @@ export default function Dashboard() {
                       <tbody>
                         {currentTransactions.map((t: Transaction) => (
                           <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616]">
-                            <td className="p-5 text-sm text-gray-500 font-regular">{new Date(t.created).toLocaleDateString()}</td>
-                            <td className="p-5 text-sm font-regular text-white">{(typeof t.merchant === 'object' && t.merchant?.name) || t.description}</td>
+                            <td className="p-5 text-sm text-emerald-500 font-regular">{new Date(t.created).toLocaleDateString()}</td>
+                            <td className="p-5 text-sm font-regular text-white">
+  {t.category?.toLowerCase() === 'transfers' && t.counterparty?.name 
+    ? formatCategory(t.counterparty.name)  
+    : ((typeof t.merchant === 'object' && t.merchant?.name) || t.description)}
+</td>
                             <td className="p-5 text-sm">
-                            <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-emerald-500 text-sm font-regular">
+                              <span className="px-3 py-1 rounded-lg py-1.5 bg-[#262626] text-white text-sm font-regular">
                                 {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
                               </span>
                             </td>
@@ -326,75 +347,6 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between border-t border-[#222] px-4 py-3 sm:px-6 mt-auto">
-                  <div className="flex flex-1 justify-between sm:hidden">
-                    <button 
-                      onClick={handlePreviousPage}
-                      disabled={currentPage === 1}
-                      className="relative inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
-                    >
-                      Previous
-                    </button>
-                    <button 
-                      onClick={handleNextPage}
-                      disabled={currentPage === totalPages || totalPages === 0}
-                      className="relative ml-3 inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-gray-400">
-                        Showing <span className="font-medium text-white">{transactions.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-medium text-white">{Math.min(indexOfLastItem, transactions.length)}</span> of <span className="font-medium text-white">{transactions.length}</span> results
-                      </p>
-                    </div>
-                    <div>
-                      <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                        <button 
-                          onClick={handlePreviousPage}
-                          disabled={currentPage === 1}
-                          className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
-                            <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                        
-                        {getPageNumbers().map((page, index) => (
-                          page === '...' ? (
-                            <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-500 border border-[#222] bg-app-bg focus:outline-offset-0">
-                              ...
-                            </span>
-                          ) : (
-                            <button
-                              key={`page-${page}`}
-                              onClick={() => setCurrentPage(page as number)}
-                              aria-current={currentPage === page ? "page" : undefined}
-                              className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0  ${
-                                currentPage === page
-                                  ? 'z-10 bg-[#161616] text-white bg-emerald-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500'
-                                  : 'text-gray-300 hover:bg-[#161616] hidden md:inline-flex'
-                              }`}
-                            >
-                              {page}
-                            </button>
-                          )
-                        ))}
-
-                        <button 
-                          onClick={handleNextPage}
-                          disabled={currentPage === totalPages || totalPages === 0}
-                          className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
-                        >
-                          <span className="sr-only">Next</span>
-                          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
-                            <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </nav>
-                    </div>
-                  </div>
                 </div>
               </section>
             </div>
@@ -417,7 +369,7 @@ export default function Dashboard() {
       {isBudgetModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
           <div className="w-full max-w-4xl">
-            <BudgetManager key={JSON.stringify(budgets)} onClose={() => setIsBudgetModalOpen(false)} />
+            <BudgetManager key={JSON.stringify(budgets)} onClose={() => setIsBudgetModalOpen(false)} onSaveSuccess={handleBudgetSaveSuccess} />
           </div>
         </div>
       )}
