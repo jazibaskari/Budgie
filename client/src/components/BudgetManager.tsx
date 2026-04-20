@@ -17,6 +17,7 @@ interface BudgetManagerProps {
 const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, onAlert}) => {
   const { budgets, fetchFinanceData, setBudgets } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>(() => {
     const initial: Record<string, string | number> = {};
@@ -33,11 +34,21 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
   };
   
   const handleSave = async () => {
+    // Check for empty strings
+    const hasEmptyFields = Object.values(localBudgets).some(val => val === "");
+    
+    if (hasEmptyFields) {
+      setShowErrors(true);
+      onAlert('Missing Information', 'Please set a budget for all categories. Use 0 if you do not wish to set a limit.');
+      return;
+    }
+
     setIsSaving(true);
+    setShowErrors(false);
     try {
       const payload: Record<string, number> = {};
       Object.entries(localBudgets).forEach(([cat, val]) => {
-        payload[cat] = val === "" ? 0 : Number(val);
+        payload[cat] = Number(val);
       });
 
       if (import.meta.env.VITE_DEMO_MODE === 'true') {
@@ -62,6 +73,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
 
   return (
     <div className="bg-[#111111] border border-[#222] rounded-[32px] w-full max-w-4xl relative max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+      
       <button 
         onClick={onClose}
         className="absolute top-6 right-6 p-2 text-gray-500 hover:text-white transition-colors z-10"
@@ -69,12 +81,14 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
       >
         <X size={24} />
       </button>
+
       <div className="p-8 md:p-10 pb-0">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Configure Budget</h2>
-        <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">
+        <p className="text-gray-400 font-regular text-sm leading-relaxed max-w-md">
           Set your monthly spending limits for each category.
         </p>
       </div>
+
       <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.entries(localBudgets).map(([category, amount]) => (
@@ -87,13 +101,18 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
                   value={amount}
                   placeholder="0.00"
                   onChange={(e) => handleUpdateBudget(category, e.target.value)}
-                  className="w-full bg-[#0A0A0A] border border-[#222] rounded-xl py-3 pl-8 pr-4 text-white outline-none focus:border-emerald-500/50 transition-all text-base"
+                  className={`w-full bg-[#0A0A0A] border rounded-xl py-3 pl-8 pr-4 text-white outline-none transition-all text-base ${
+                    showErrors && amount === "" 
+                      ? 'border-red-500/50 focus:border-red-500' 
+                      : 'border-[#222] focus:border-emerald-500/50'
+                  }`}
                 />
               </div>
             </div>
           ))}
         </div>
       </div>
+
       <div className="p-6 bg-[#161616] border-t border-[#222] flex justify-end gap-4">
         <button 
           onClick={handleSave} 
