@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, AlertCircle, X } from 'lucide-react';
+import { Save, X } from 'lucide-react';
 import api from '../api/axiosConfig'; 
 import { useFinance } from '../hooks/useFinance';
 
@@ -11,12 +11,12 @@ const DEFAULT_CATEGORIES = [
 interface BudgetManagerProps {
   onClose: () => void;
   onSaveSuccess: () => void; 
+  onAlert: (title: string, message: string) => void;
 }
 
-const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess }) => {
-  const { budgets, fetchFinanceData } = useFinance();
+const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, onAlert}) => {
+  const { budgets, fetchFinanceData, setBudgets } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
-  const [localAlert, setLocalAlert] = useState<{ type: 'error', title: string, message: string } | null>(null);
   const [showErrors, setShowErrors] = useState(false);
 
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>(() => {
@@ -37,22 +37,33 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess })
     const hasEmptyFields = Object.values(localBudgets).some(v => v === "" || v === null);
     if (hasEmptyFields) {
       setShowErrors(true);
-      setLocalAlert({ type: 'error', title: 'Attention needed', message: 'Please fill all budget fields.' });
+      onAlert('Incomplete Fields', 'Please fill all budget fields before saving.');
       return;
     }
   
     setIsSaving(true);
-    setLocalAlert(null); 
+
+    
+    const sanitizedBudgets = Object.fromEntries(
+      Object.entries(localBudgets).map(([k, v]) => [k, Number(v)])
+    );
+
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      setTimeout(() => {
+        setBudgets(sanitizedBudgets); 
+        onSaveSuccess();
+        onClose();
+      }, 800);
+      return;
+    }
+
     try {
-      const sanitizedBudgets = Object.fromEntries(
-        Object.entries(localBudgets).map(([k, v]) => [k, Number(v)])
-      );
       await api.post('/user/update-budgets', { budgets: sanitizedBudgets });
       await fetchFinanceData();
       onSaveSuccess();
       onClose();
     } catch {
-      setLocalAlert({ type: 'error', title: 'Save Failed', message: 'Could not update budgets.' });
+      onAlert('Save Failed', 'Could not update budgets.');
       setIsSaving(false);
     }
   };
@@ -62,17 +73,6 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess })
       <button onClick={onClose} className="absolute top-6 right-6 text-gray-500 hover:text-white">
         <X size={24} />
       </button>
-
-      {localAlert && (
-        <div className="mb-6 p-4 rounded-xl border bg-[#1a0a0a] border-red-500/50 flex items-center gap-3">
-          <AlertCircle className="h-5 w-5 text-red-500" />
-          <div className="text-left">
-            <h3 className="text-sm font-medium text-red-200">{localAlert.title}</h3>
-            <p className="text-xs text-red-300">{localAlert.message}</p>
-          </div>
-        </div>
-      )}
-
       <div className="flex justify-between items-center mb-8 pr-8">
         <div>
           <h2 className="text-2xl font-medium text-white">Budget Configuration</h2>
