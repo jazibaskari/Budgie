@@ -133,7 +133,6 @@ export default function Dashboard() {
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
       setIsSyncing(true);
       setTimeout(() => {
-        setIsAuthorized(true); 
         setDrafts(DUMMY_TRANSACTIONS);
         setAlert(null);
         setIsSyncing(false);
@@ -155,10 +154,9 @@ export default function Dashboard() {
           ...t,
           category: t.category || 'Food'
         }));
-      
-      setIsAuthorized(true); 
 
       if (processed.length === 0) {
+        setIsAuthorized(true); 
         setDrafts(null);
         setAlert({ 
           type: 'success', 
@@ -193,6 +191,7 @@ export default function Dashboard() {
   const onConfirmSuccess = async (confirmedData: Transaction[]) => {
     setDrafts(null); 
     setTransactions(confirmedData); 
+    setIsAuthorized(true); 
 
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
       setAlert({ type: 'success', title: 'Demo Mode', message: 'Transactions processed locally.' });
@@ -365,28 +364,28 @@ export default function Dashboard() {
     <div className="overflow-x-auto">
       <table className="w-full text-left table-fixed">
         <thead>
-          <tr className="bg-[#1A1A1A] text-white">
-            <th className="p-5 font-regular text-sm w-[120px]">Date</th>
-            <th className="p-5 font-regular text-sm">Merchant</th>
-            <th className="p-5 font-regular text-sm w-[140px]">Category</th>
-            <th className="p-5 font-regular text-sm text-right w-[100px]">Amount</th>
+          <tr className="bg-[#161616] text-white">
+            <th scope="col" className="p-5 font-regular text-sm">Date</th>
+            <th scope="col" className="p-5 font-regular text-sm">Merchant</th>
+            <th scope="col" className="p-5 font-regular text-sm">Category</th>
+            <th scope="col" className="p-5 font-regular text-sm text-right">Amount</th>
           </tr>
         </thead>
         <tbody>
           {currentTransactions.map((t: Transaction) => (
-            <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616] h-[72px]">
-              <td className="p-5 text-sm text-white font-regular truncate">
+            <tr key={t._id} className="odd:bg-black even:bg-[#1A1A1A] border-b border-[#222] hover:odd:bg-[#161616] hover:even:bg-black h-[72px]">
+              <td scope="row" className="p-5 text-sm text-white font-regular truncate">
                 {new Date(t.created).toLocaleDateString('en-GB')}
               </td>
-              <td className="p-5 text-sm font-regular text-white truncate">
+              <td scope="row"className="p-5 text-sm font-regular text-white truncate">
                 {(typeof t.merchant === 'object' && t.merchant?.name) || t.description}
               </td>
-              <td className="p-5 text-sm">
-                <span className="px-3.5 py-2.5 border-radius-[15] rounded-2xl py-1.5 bg-[#222] text-white text-sm font-medium whitespace-nowrap">
+              <td scope="row" className="p-5 text-sm">
+                <span className="px-3.5 py-2.5 border-radius-[15] rounded-2xl py-1.5 bg-[#161616] text-white text-sm font-medium whitespace-nowrap">
                   {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
                 </span>
               </td>
-              <td className="p-5 text-sm text-right font-regular text-white">
+              <td scope="row" className="p-5 text-sm text-right font-regular text-white">
                 £{(Math.abs(t.amount) / 100).toFixed(2)}
               </td>
             </tr>
@@ -444,7 +443,7 @@ export default function Dashboard() {
                 key={`page-${page}`} 
                 onClick={() => setCurrentPage(page as number)} 
                 aria-current={currentPage === page ? "page" : undefined} 
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${currentPage === page ? 'z-10 bg-emerald-500/50 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500' : 'text-gray-300 hover:bg-[#161616] border border-[#222] hidden md:inline-flex'}`}
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${currentPage === page ? 'z-10 bg-[#161616] text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500' : 'text-gray-300 hover:bg-[#161616] border border-[#222] hidden md:inline-flex'}`}
               >
                 {page}
               </button>

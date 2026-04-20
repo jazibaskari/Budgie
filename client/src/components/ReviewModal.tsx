@@ -29,13 +29,14 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
   }, []);
 
   const processedTransactions = useMemo(() => {
-    return [...transactions]
-      .filter(t => {
+    // Deep clone the incoming transactions to ensure edits stay inside the modal
+    return JSON.parse(JSON.stringify([...transactions]))
+      .filter((t: any) => {
         if (t.category === 'Declined' || t.decline_reason) return false;
         const isTransfer = t.category?.toLowerCase() === 'transfers';
         return !(isTransfer && t.amount > 0);
       })
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         const dateA = new Date(a.created || a.createdAt || a.date || 0).getTime();
         const dateB = new Date(b.created || b.createdAt || b.date || 0).getTime();
         return dateB - dateA;
@@ -74,7 +75,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
   const updateCategory = (pageIdx: number, cat: string) => {
     const actualIdx = currentPage * ITEMS_PER_PAGE + pageIdx;
     const newItems = [...items];
-    newItems[actualIdx].category = cat;
+    newItems[actualIdx] = { ...newItems[actualIdx], category: cat };
     setItems(newItems);
     setOpenDropdownIdx(null);
   };
@@ -104,22 +105,24 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
   };
 
   const paginatedItems = items.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
-  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
       <div className="bg-[#111] border border-[#222] w-full max-w-4xl max-h-[80vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl">
-      <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
-  <div>
-  <h2 className="text-2xl font-medium text-white">Review Transactions</h2>
-    <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">
-      Review your latest transactions.
-    </p>
-  </div>
-  <button onClick={onClose} className="text-gray-500 hover:text-white">
-    <X size={20}/>
-  </button>
-</div>
+        <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
+          <div>
+            <h2 className="text-2xl font-medium text-white">Review Transactions</h2>
+            <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">
+              Review your latest transactions.
+            </p>
+          </div>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onClose(); }} 
+            className="text-gray-500 hover:text-white"
+          >
+            <X size={20}/>
+          </button>
+        </div>
 
         <div ref={scrollContainerRef} className="overflow-y-auto flex-1">
           <table className="w-full text-left">
@@ -134,10 +137,10 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
               {paginatedItems.map((t, idx) => (
                 <tr key={idx} className="border-b border-[#222]">
                   <td className="p-5 text-sm text-white">
-  {t.category?.toLowerCase() === 'transfers' && t.counterparty?.name 
-    ? t.counterparty.name 
-    : (t.merchant?.name || t.description || "Unknown")}
-</td>
+                    {t.category?.toLowerCase() === 'transfers' && t.counterparty?.name 
+                      ? t.counterparty.name 
+                      : (t.merchant?.name || t.description || "Unknown")}
+                  </td>
                   <td className="p-5">
                     <div className="relative">
                       <button
@@ -180,9 +183,9 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
         </div>
 
         <div className="p-6 bg-[#161616] border-t border-[#222] flex justify-end gap-4">
-                <button onClick={handleConfirm} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-400 transition-all">
-                <Save size={18} /> {isSaving ? 'Saving...' : 'Confirm'}
-                </button>
+          <button onClick={handleConfirm} className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-400 transition-all">
+            <Save size={18} /> {isSaving ? 'Saving...' : 'Confirm'}
+          </button>
         </div>
       </div>
     </div>
