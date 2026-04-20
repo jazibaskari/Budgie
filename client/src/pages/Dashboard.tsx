@@ -13,12 +13,12 @@ import TextAnimation from "../components/AnimatedText";
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 import TotalExpenses from '../components/TotalExpenses';
 import Footer from '../components/Footer';
-import { formatCategory } from '../utils/financeUtils';
+import { DUMMY_TRANSACTIONS } from '../utils/mockData';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
-  <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-dashed border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
+  <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
     <div className="p-6 bg-emerald-500/5 rounded-full mb-6">
-      <Lock size={48} className="text-emerald-500/20" />
+      <Lock size={48} className="text-emerald-500" strokeWidth={1}/>
     </div>
     <h3 className="text-xl font-medium text-white mb-2">{title}</h3>
     <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">{message}</p>
@@ -51,11 +51,21 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    console.log("Is Demo Mode active?", import.meta.env.VITE_DEMO_MODE);
+  }, []);
+
+  useEffect(() => {
     setCurrentPage(1);
   }, [transactions]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
+      if (import.meta.env.VITE_DEMO_MODE === 'true') {
+        setUserName('Alissa');
+        console.log(import.meta.env.VITE_DEMO_MODE)
+        return;
+      }
+
       try {
         const response = await api.get('/user/profile', { withCredentials: true });
         const userData = response.data?.user || response.data;
@@ -110,11 +120,31 @@ export default function Dashboard() {
 
   const syncMonzoData = async () => {
     if (isSyncing) return;
+
+    if (isAuthorized) {
+      setAlert({ 
+        type: 'success', 
+        title: 'Up to Date', 
+        message: 'Monzo Synced successfully. You have no new transactions to review.' 
+      });
+      return;
+    }
+ 
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      setIsSyncing(true);
+      setTimeout(() => {
+        setIsAuthorized(true); 
+        setDrafts(DUMMY_TRANSACTIONS);
+        setAlert(null);
+        setIsSyncing(false);
+      }, 1200); 
+      return;
+    }
+
     setIsSyncing(true);
     try {
       const monzoResponse = await api.get('/monzo/transactions');
       
-      // Apply the exact filtering logic from ReviewModal here
       const processed = monzoResponse.data
         .filter((t: any) => {
           if (t.category === 'Declined' || t.decline_reason) return false;
@@ -162,7 +192,13 @@ export default function Dashboard() {
   
   const onConfirmSuccess = async (confirmedData: Transaction[]) => {
     setDrafts(null); 
-    setTransactions(confirmedData);
+    setTransactions(confirmedData); 
+
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      setAlert({ type: 'success', title: 'Demo Mode', message: 'Transactions processed locally.' });
+      return;
+    }
+
     try {
       await api.post('/monzo/confirm', { transactions: confirmedData });
       setAlert({ type: 'success', title: 'Transactions Saved', message: 'Reviewed and saved successfully.' });
@@ -310,45 +346,114 @@ export default function Dashboard() {
                 <TotalExpenses />
               </div>
 
-              <section id="transactions" className="lg:col-span-7 bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between">
-                <div>
-                  <div className="p-6 border-b border-[#222] bg-[#161616]">
-                    <h1 className="text-2xl font-medium">{displayMonth}'s Transactions</h1>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left">
-                      <thead>
-                        <tr className="bg-[#262626] text-white">
-                          <th className="p-5 font-regular text-sm">Date</th>
-                          <th className="p-5 font-regular text-sm">Merchant</th>
-                          <th className="p-5 font-regular text-sm">Category</th>
-                          <th className="p-5 font-regular text-sm text-right">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentTransactions.map((t: Transaction) => (
-                          <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616]">
-                            <td className="p-5 text-sm text-emerald-500 font-regular">{new Date(t.created).toLocaleDateString()}</td>
-                            <td className="p-5 text-sm font-regular text-white">
-  {t.category?.toLowerCase() === 'transfers' && t.counterparty?.name 
-    ? formatCategory(t.counterparty.name)  
-    : ((typeof t.merchant === 'object' && t.merchant?.name) || t.description)}
-</td>
-                            <td className="p-5 text-sm">
-                              <span className="px-3 py-1 rounded-lg py-1.5 bg-[#262626] text-white text-sm font-regular">
-                                {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
-                              </span>
-                            </td>
-                            <td className="p-5 text-sm text-right font-regular text-white">£{(Math.abs(t.amount) / 100).toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between border-t border-[#222] px-4 py-3 sm:px-6 mt-auto">
-                </div>
-              </section>
+              <section id="transactions" className="lg:col-span-7 bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between min-h-[600px]">
+  <div>
+    <div className="p-6 border-b border-[#222] bg-[#161616]">
+      <h1 className="text-2xl font-medium">{displayMonth}'s Transactions</h1>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-left table-fixed">
+        <thead>
+          <tr className="bg-[#1A1A1A] text-white">
+            <th className="p-5 font-regular text-sm w-[120px]">Date</th>
+            <th className="p-5 font-regular text-sm">Merchant</th>
+            <th className="p-5 font-regular text-sm w-[140px]">Category</th>
+            <th className="p-5 font-regular text-sm text-right w-[100px]">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {currentTransactions.map((t: Transaction) => (
+            <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616] h-[72px]">
+              <td className="p-5 text-sm text-gray-500 font-regular truncate">
+                {new Date(t.created).toLocaleDateString('en-GB')}
+              </td>
+              <td className="p-5 text-sm font-regular text-white truncate">
+                {(typeof t.merchant === 'object' && t.merchant?.name) || t.description}
+              </td>
+              <td className="p-5 text-sm">
+                <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-white text-sm font-regular whitespace-nowrap">
+                  {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
+                </span>
+              </td>
+              <td className="p-5 text-sm text-right font-regular text-white">
+                £{(Math.abs(t.amount) / 100).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+          {Array.from({ length: Math.max(0, itemsPerPage - currentTransactions.length) }).map((_, i) => (
+            <tr key={`empty-${i}`} className="h-[72px] border-b border-[#222]/10">
+              <td colSpan={4}>&nbsp;</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div className="flex items-center justify-between border-t border-[#222] px-4 py-3 sm:px-6 mt-auto bg-[#0c0c0c]">
+    <div className="flex flex-1 justify-between sm:hidden">
+      <button 
+        onClick={handlePreviousPage} 
+        disabled={currentPage === 1} 
+        className="relative inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
+      >
+        Previous
+      </button>
+      <button 
+        onClick={handleNextPage} 
+        disabled={currentPage === totalPages || totalPages === 0} 
+        className="relative ml-3 inline-flex items-center rounded-md border border-[#333] bg-[#161616] px-4 py-2 text-sm font-medium text-gray-200 hover:bg-[#222] disabled:opacity-50"
+      >
+        Next
+      </button>
+    </div>
+    <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+      <div>
+        <p className="text-sm text-gray-400">
+          Showing <span className="font-medium text-white">{transactions.length > 0 ? indexOfFirstItem + 1 : 0}</span> to <span className="font-medium text-white">{Math.min(indexOfLastItem, transactions.length)}</span> of <span className="font-medium text-white">{transactions.length}</span> results
+        </p>
+      </div>
+      <div>
+        <nav aria-label="Pagination" className="isolate inline-flex -space-x-px rounded-md shadow-sm">
+          <button 
+            onClick={handlePreviousPage} 
+            disabled={currentPage === 1} 
+            className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
+          >
+            <span className="sr-only">Previous</span>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
+              <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
+            </svg>
+          </button>
+          {getPageNumbers().map((page, index) => (
+            page === '...' ? (
+              <span key={`ellipsis-${index}`} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-500 border border-[#222] bg-app-bg focus:outline-offset-0">...</span>
+            ) : (
+              <button 
+                key={`page-${page}`} 
+                onClick={() => setCurrentPage(page as number)} 
+                aria-current={currentPage === page ? "page" : undefined} 
+                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${currentPage === page ? 'z-10 bg-emerald-500/50 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500' : 'text-gray-300 hover:bg-[#161616] border border-[#222] hidden md:inline-flex'}`}
+              >
+                {page}
+              </button>
+            )
+          ))}
+          <button 
+            onClick={handleNextPage} 
+            disabled={currentPage === totalPages || totalPages === 0} 
+            className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 hover:bg-[#161616] focus:z-20 focus:outline-offset-0 disabled:opacity-50 border border-[#222]"
+          >
+            <span className="sr-only">Next</span>
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" className="size-5">
+              <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </div>
+</section>
             </div>
             <div id="metrics" className="grid grid-cols-1 lg:grid-cols-12 gap-8 pb-20">
               <div className="lg:col-span-5"><CategoryGrid /></div>
@@ -369,7 +474,7 @@ export default function Dashboard() {
       {isBudgetModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
           <div className="w-full max-w-4xl">
-            <BudgetManager key={JSON.stringify(budgets)} onClose={() => setIsBudgetModalOpen(false)} onSaveSuccess={handleBudgetSaveSuccess} />
+            <BudgetManager key={JSON.stringify(budgets)} onClose={() => setIsBudgetModalOpen(false)} onSaveSuccess={handleBudgetSaveSuccess} onAlert={( title, message) => setAlert({ type: 'error', title, message })} />
           </div>
         </div>
       )}

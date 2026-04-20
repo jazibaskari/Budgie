@@ -49,7 +49,7 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
   }, [transactions]);
 
   return (
-    <div className="bg-[#141414] border border-[#262626] rounded-xl p-6 shadow-xl flex-1 justify-center">
+    <div className="bg-[#141414] border border-[#262626] h-[200px] rounded-xl p-6 shadow-xl flex-1 justify-center">
       <h1 className="text-2xl font-medium mb-8">Highest Expenses</h1>
       <div className="space-y-6">
         <div>
