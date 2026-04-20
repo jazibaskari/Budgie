@@ -16,12 +16,12 @@ import Footer from '../components/Footer';
 import { DUMMY_TRANSACTIONS } from '../utils/mockData';
 
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
-  <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
-    <div className="p-6 bg-emerald-500/5 rounded-full mb-6">
+  <div id={id} className="flex flex-col items-center justify-center p-32 rounded-[40px] bg-[#1a1a1a] text-center mb-8">
+    <div className="p-6 bg-[#262626] rounded-full mb-6">
       <Lock size={48} className="text-white-500" strokeWidth={1}/>
     </div>
     <h3 className="text-xl font-medium text-white mb-2">{title}</h3>
-    <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">{message}</p>
+    <p className="text-gray-300 font-regular text-sm leading-relaxed max-w-md">{message}</p>
   </div>
 );
 
@@ -279,13 +279,13 @@ export default function Dashboard() {
               <div className="hidden md:flex items-center gap-6 animate-in fade-in slide-in-from-left-4 duration-500">
                 <button 
                   onClick={() => scrollToSection('transactions')}
-                  className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                  className="text-xs font-bold text-gray-300 hover:text-white transition-colors"
                 >
                   Overview
                 </button>
                 <button 
                   onClick={() => scrollToSection('metrics')}
-                  className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                  className="text-xs font-bold text-gray-300 hover:text-white transition-colors"
                 >
                   Insights
                 </button>
@@ -304,7 +304,7 @@ export default function Dashboard() {
       window.location.href = `${backendUrl}/auth/logout`;
     }
   }} 
-  className="text-xs font-medium text-gray-400 hover:text-red-400 transition-all flex items-center gap-2"
+  className="text-xs font-medium text-gray-300 hover:text-red-400 transition-all flex items-center gap-2"
 >
   <LogOut size={16} /> Logout
 </button>
@@ -375,14 +375,14 @@ export default function Dashboard() {
         <tbody>
           {currentTransactions.map((t: Transaction) => (
             <tr key={t._id} className="border-b border-[#222] hover:bg-[#161616] h-[72px]">
-              <td className="p-5 text-sm text-gray-500 font-regular truncate">
+              <td className="p-5 text-sm text-white font-regular truncate">
                 {new Date(t.created).toLocaleDateString('en-GB')}
               </td>
               <td className="p-5 text-sm font-regular text-white truncate">
                 {(typeof t.merchant === 'object' && t.merchant?.name) || t.description}
               </td>
               <td className="p-5 text-sm">
-                <span className="px-3 py-1 rounded-lg py-1.5 bg-[#222] text-white text-sm font-regular whitespace-nowrap">
+                <span className="px-3.5 py-2.5 border-radius-[15] rounded-2xl py-1.5 bg-[#222] text-white text-sm font-medium whitespace-nowrap">
                   {ALL_CATEGORIES.find(c => c.value === t.category)?.label || t.category}
                 </span>
               </td>
