@@ -15,10 +15,10 @@ const DemoLogout = () => {
           <div className="max-w-md w-full animate-in fade-in slide-in-from-right duration-1000">
             <div className="mb-10">
               <h2 className="text-3xl font-medium text-white mb-6">
-                You can't manage what you don't measure<span className="text-emerald-500">.</span>
+                You have successfully logged out<span className="text-emerald-500">.</span>
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                You have successfully <span className="text-white font-medium">logged out</span>.
+                Thanks for testing Budgy's <span className="text-white font-medium">'Demo Mode'</span>. Feel free to clone the <span className="text-white font-medium">'Budgy'</span> repository and create your own version. 
               </p>
             </div>
   
