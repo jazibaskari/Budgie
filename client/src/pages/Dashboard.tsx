@@ -298,7 +298,7 @@ export default function Dashboard() {
     localStorage.clear(); 
     
     if (import.meta.env.VITE_DEMO_MODE === 'true') {
-      window.location.href = '/logout'; 
+      window.location.href = '/demologout'; 
     } else {
       const backendUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
       window.location.href = `${backendUrl}/auth/logout`;
@@ -322,7 +322,7 @@ export default function Dashboard() {
                 </h1>
               </TextAnimation>
               <TextAnimation duration={1.1} >
-                <p className="text-gray-300 font- text-4xl mb-2">
+                <p className="text-gray-300 font-regular text-4xl mb-2">
                   <span className="text-emerald-500">{currentMonth}</span>
                 </p> 
               </TextAnimation>
