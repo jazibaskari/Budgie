@@ -61,11 +61,11 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
             {topCategories.map((expense, index) => (
               <div 
                 key={expense.name} 
-                className="flex items-center gap-2 bg-[#262626] border border-[#262626] mb-4 px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
+                className="flex items-center gap-2 bg-[#262626] border border-[#262626] mb-4 px-3.5 py-2.5 rounded-2xl transition-colors hover:border-[#333]"
               >
-                <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
-                <span className="text-white text-xs font-medium">{expense.name}</span>
-                <span className="text-emerald-500 text-xs font-bold">£{expense.amount.toFixed(0)}</span>
+                <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>
+                <span className="text-white text-sm font-medium">{expense.name}</span>
+                <span className="text-emerald-500 text-sm font-bold">£{expense.amount.toFixed(0)}</span>
               </div>
             ))}
           </div>
@@ -79,12 +79,12 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
             {topMerchants.map((merchant, index) => (
               <div 
                 key={merchant.name} 
-                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3 py-1.5 rounded-lg transition-colors hover:border-[#333]"
+                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3.5 py-2.5 rounded-2xl transition-colors hover:border-[#333]"
               >
-                <span className="text-gray-500 text-[10px] font-medium">#{index + 1}</span>
+                <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>
                 
-                <span className="text-white text-xs font-medium truncate max-w-[100px]">{merchant.name}</span>
-                <span className="text-emerald-500 text-xs font-bold">£{merchant.amount.toFixed(0)}</span>
+                <span className="text-white text-sm font-medium truncate max-w-[100px]">{merchant.name}</span>
+                <span className="text-emerald-500 text-sm font-bold">£{merchant.amount.toFixed(0)}</span>
               </div>
             ))}
           </div>
