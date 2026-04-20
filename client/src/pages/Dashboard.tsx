@@ -18,7 +18,7 @@ import { DUMMY_TRANSACTIONS } from '../utils/mockData';
 const LockedSection = ({ title, message, id }: { title: string, message: string, id?: string }) => (
   <div id={id} className="flex flex-col items-center justify-center p-32 border-2 border-[#222] rounded-[40px] bg-[#0c0c0c] text-center mb-8">
     <div className="p-6 bg-emerald-500/5 rounded-full mb-6">
-      <Lock size={48} className="text-emerald-500" strokeWidth={1}/>
+      <Lock size={48} className="text-white-500" strokeWidth={1}/>
     </div>
     <h3 className="text-xl font-medium text-white mb-2">{title}</h3>
     <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">{message}</p>
