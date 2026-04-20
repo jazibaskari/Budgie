@@ -1,29 +1,33 @@
 import React, { useEffect } from 'react';
 import { useFinance } from '../hooks/useFinance';
 import { 
-  Heart, 
   ShoppingCart, 
   Car, 
-  Plane, 
-  Zap, 
+  Plane,  
   Utensils, 
-  Briefcase, 
-  Gift, 
-  HelpCircle 
+  HelpCircle , 
+  Clapperboard,
+  ReceiptText, 
+  Banknote,
+  Handbag,
+  LayoutDashboard,
+  RefreshCcw
 } from 'lucide-react';
 import { ALL_CATEGORIES } from '../utils/financeUtils';
 
 const ICON_MAP: Record<string, React.ReactNode> = {
-  "General": <Gift size={18} />,
+  "General": <LayoutDashboard size={18} />,
   "Holidays": <Plane size={18} />,
   "Transport": <Car size={18} />,
-  "Shopping": <Briefcase size={18} />,
+  "Shopping": <Handbag size={18} />,
   "Groceries": <ShoppingCart size={18} />,
-  "Entertainment": <Heart size={18} />,
-  "Bills": <Zap size={18} />,
+  "Entertainment": <Clapperboard size={18} />,
+  "Bills": <ReceiptText size={18} />,
   "Eating Out": <Utensils size={18} />,
-  "Cash": <Utensils size={18} />,
+  "Cash": <Banknote size={18} />,
   "Expenses": <Utensils size={18} />,
+  "Transfers": <RefreshCcw size={18} />,
+
 };
 
 const CategoryGrid: React.FC = () => {

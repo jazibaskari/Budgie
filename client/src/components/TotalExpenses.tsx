@@ -35,7 +35,7 @@ const TotalExpenses: React.FC = () => {
       <div className="p-6 border-b border-[#222] bg-[#161616]">
         <h1 className="text-2xl font-medium text-left">{displayMonth}'s Outgoings</h1>
       </div>
-      <div className="flex flex-col items-center justify-start flex-1 p-20 text-center bg-black">
+      <div className="flex flex-col items-center justify-start flex-1 p-20 text-center bg-[#0a0a0a]">
         <div className="mt-2 mb-0">
           <span className="text-white text-8xl font-regular leading-none">
             £{totalSpent.toFixed(0)}

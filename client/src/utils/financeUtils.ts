@@ -1,11 +1,14 @@
 export const MONZO_CATEGORIES = [
     "general", "eating_out", "expenses", "transport", "cash", 
-    "bills", "entertainment", "shopping", "holidays", "groceries"
+    "bills", "entertainment", "shopping", "holidays", "groceries", "transfers"
   ];
   
   export const formatCategory = (str: string) => {
+    if (!str) return 'General';
+    
     return str
-      .split('_')
+      .split(/[ _]/) 
+      .filter(Boolean) 
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(' ');
   };

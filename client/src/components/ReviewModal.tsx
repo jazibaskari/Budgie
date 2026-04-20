@@ -127,7 +127,11 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
             <tbody>
               {paginatedItems.map((t, idx) => (
                 <tr key={idx} className="border-b border-[#222]">
-                  <td className="p-5 text-sm text-white">{t.merchant?.name || t.description || "Unknown"}</td>
+                  <td className="p-5 text-sm text-white">
+  {t.category?.toLowerCase() === 'transfers' && t.counterparty?.name 
+    ? t.counterparty.name 
+    : (t.merchant?.name || t.description || "Unknown")}
+</td>
                   <td className="p-5">
                     <div className="relative">
                       <button
