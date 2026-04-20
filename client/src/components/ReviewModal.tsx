@@ -81,6 +81,12 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
 
   const handleConfirm = async () => {
     setIsSaving(true);
+    if (import.meta.env.VITE_DEMO_MODE === 'true') {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      onConfirm(items); 
+      setIsSaving(false);
+      return;
+    }
     try {
       await api.post('/monzo/confirm', { transactions: items });
       onConfirm(items); 
