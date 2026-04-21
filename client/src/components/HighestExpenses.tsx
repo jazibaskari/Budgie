@@ -49,46 +49,46 @@ const HighestExpenses: React.FC<HighestExpensesProps> = ({ showOnlyTotal }) => {
   }, [transactions]);
 
   return (
-    <div className="bg-[#141414] border border-[#262626] h-[200px] rounded-xl p-6 shadow-xl flex-1 justify-center">
+    <div className="bg-[#141414] border border-[#262626] h-auto min-h-[200px] rounded-xl p-6 shadow-xl flex-1 justify-center">
       <h1 className="text-2xl font-medium mb-6">Highest Expenses</h1>
-      <div className="space-y-6">
+      <div className="space-y-8">
         <div>
-          <h2 className="text-xl font-medium mb-4 text-white">Categories</h2>
-          <div className="flex flex-wrap gap-2">
-          <span className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
-          You've spent the most on <span className="text-white font-bold">{topCategories[0]?.name}</span> this month. Try to identify potential savings opportunities here.
-        </span>
+          <h2 className="text-xl font-medium mb-2 text-white">Categories</h2>
+          <p className="text-gray-300 font-regular text-sm md:text-md mb-4 leading-relaxed">
+            You've spent the most on <span className="text-white font-regular">{topCategories[0]?.name}</span> this month. Try to identify potential savings opportunities here.
+          </p>
+          <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3">
             {topCategories.map((expense, index) => (
               <div 
                 key={expense.name} 
-                className="flex items-center gap-2 bg-[#262626] border border-[#262626] mb-4 px-3.5 py-2.5 rounded-2xl transition-colors hover:border-[#333]"
+                className="flex items-center gap-1.5 md:gap-2 bg-[#262626] border border-[#262626] px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl md:rounded-2xl transition-colors hover:border-[#333]"
               >
-                <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>
-                <span className="text-white text-sm font-medium">{expense.name}</span>
-                <span className="text-emerald-500 text-sm font-bold">£{expense.amount.toFixed(0)}</span>
+                <span className="text-gray-500 text-xs md:text-sm font-medium shrink-0">#{index + 1}</span>
+                <span className="text-white text-xs md:text-sm font-medium truncate flex-1 min-w-[40px]">{expense.name}</span>
+                <span className="text-emerald-500 text-xs md:text-sm font-medium shrink-0">£{expense.amount.toFixed(0)}</span>
               </div>
             ))}
           </div>
         </div>
         <div>
-          <h2 className="text-xl font-medium mb-3 text-white mb-4">Merchants</h2>
-          <div className="flex flex-wrap gap-2">
-          <span className="text-gray-300 font-regular text-md mb-4 leading-relaxed">
-          You've spent the most at <span className="text-white font-bold">{topMerchants[0]?.name}</span> this month. Are there better-value alternatives available with similar merchants?
-        </span>
+          <h2 className="text-xl font-medium mb-2 text-white">Merchants</h2>
+          <p className="text-gray-300 font-regular text-sm md:text-md mb-4 leading-relaxed">
+            You've spent the most at <span className="text-white font-medium">{topMerchants[0]?.name}</span> this month. Are there better-value alternatives available with similar merchants?
+          </p>
+          <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2 md:gap-3">
             {topMerchants.map((merchant, index) => (
               <div 
                 key={merchant.name} 
-                className="flex items-center gap-2 bg-[#262626] border border-[#262626] px-3.5 py-2.5 rounded-2xl transition-colors hover:border-[#333]"
+                className="flex items-center gap-1.5 md:gap-2 bg-[#262626] border border-[#262626] px-3 py-2 md:px-3.5 md:py-2.5 rounded-xl md:rounded-2xl transition-colors hover:border-[#333]"
               >
-                <span className="text-gray-500 text-sm font-medium">#{index + 1}</span>
-                
-                <span className="text-white text-sm font-medium truncate max-w-[100px]">{merchant.name}</span>
-                <span className="text-emerald-500 text-sm font-bold">£{merchant.amount.toFixed(0)}</span>
+                <span className="text-gray-500 text-xs md:text-sm font-medium shrink-0">#{index + 1}</span>
+                <span className="text-white text-xs md:text-sm font-medium truncate flex-1 min-w-[40px]">{merchant.name}</span>
+                <span className="text-emerald-500 text-xs md:text-sm font-medium shrink-0">£{merchant.amount.toFixed(0)}</span>
               </div>
             ))}
           </div>
         </div>
+
       </div>
     </div>
   );

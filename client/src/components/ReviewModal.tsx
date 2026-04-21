@@ -29,7 +29,6 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
   }, []);
 
   const processedTransactions = useMemo(() => {
-    // Deep clone the incoming transactions to ensure edits stay inside the modal
     return JSON.parse(JSON.stringify([...transactions]))
       .filter((t: any) => {
         if (t.category === 'Declined' || t.decline_reason) return false;
@@ -111,7 +110,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
       <div className="bg-[#111] border border-[#222] w-full max-w-4xl max-h-[80vh] rounded-[32px] overflow-hidden flex flex-col shadow-2xl">
         <div className="p-6 border-b border-[#222] flex justify-between items-center bg-[#161616]">
           <div>
-            <h2 className="text-2xl font-medium text-white">Review Transactions</h2>
+            <h2 className="text-2xl font-bold text-white">Review Transactions</h2>
             <p className="text-gray-500 font-regular text-sm leading-relaxed max-w-md">
               Review your latest transactions.
             </p>
@@ -126,7 +125,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ transactions, onClose, onConf
 
         <div ref={scrollContainerRef} className="overflow-y-auto flex-1">
           <table className="w-full text-left">
-            <thead className="bg-[#1A1A1A] text-white text-sm sticky top-0 z-10">
+            <thead className="bg-[#1A1A1A] text-white-300 text-sm sticky top-0 z-10">
               <tr>
                 <th className="p-5 font-regular text-sm">Merchant</th>
                 <th className="p-5 font-regular text-sm">Category</th>

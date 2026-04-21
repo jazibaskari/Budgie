@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Save, X } from 'lucide-react';
 import api from '../api/axiosConfig'; 
 import { useFinance } from '../hooks/useFinance';
@@ -18,6 +18,7 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
   const { budgets, fetchFinanceData, setBudgets } = useFinance();
   const [isSaving, setIsSaving] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const [localBudgets, setLocalBudgets] = useState<Record<string, number | string>>(() => {
     const initial: Record<string, string | number> = {};
@@ -33,8 +34,19 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
     }
   };
   
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); 
+      const nextInput = inputRefs.current[index + 1];
+      if (nextInput) {
+        nextInput.focus();
+      } else {
+        e.currentTarget.blur();
+      }
+    }
+  };
+
   const handleSave = async () => {
-    // Check for empty strings
     const hasEmptyFields = Object.values(localBudgets).some(val => val === "");
     
     if (hasEmptyFields) {
@@ -91,13 +103,16 @@ const BudgetManager: React.FC<BudgetManagerProps> = ({ onClose, onSaveSuccess, o
 
       <div className="flex-1 overflow-y-auto p-8 md:p-10 custom-scrollbar">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(localBudgets).map(([category, amount]) => (
+          {Object.entries(localBudgets).map(([category, amount], index) => (
             <div key={category} className="bg-[#181818] border border-[#262626] p-4 rounded-2xl flex flex-col gap-2">
-              <label className="text-sm font-regular text-gray-500">{category}</label>
+              <label className="text-sm font-bold text-white-300">{category}</label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">£</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">£</span>
                 <input
+                  ref={(el) => { inputRefs.current[index] = el; }}
                   type="text"
+                  enterKeyHint={index < Object.keys(localBudgets).length - 1 ? "next" : "done"}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
                   value={amount}
                   placeholder="0.00"
                   onChange={(e) => handleUpdateBudget(category, e.target.value)}
