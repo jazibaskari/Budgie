@@ -343,11 +343,10 @@ export default function Dashboard() {
         </header>
 
         {!hasBudgetsSet ? (
-          <LockedSection title="Dashboard Locked" message="Please set your monthly budgets to unlock tracking." />
+          <LockedSection title="Dashboard Locked" message="Set your monthly budget to unlock your metrics." />
         ) : !monzoDataFetched ? (
           <div className="animate-in fade-in duration-700">
-            <LockedSection id="transactions" title="Transactions Locked" message="Sync your Monzo account to fetch latest data." />
-            <LockedSection id="metrics" title="Metrics Locked" message="Analytics will unlock after sync." />
+            <LockedSection id="transactions" title="Dashbaord Locked" message="Sync your Monzo account to fetch the latest data." />
           </div>
         ) : (
           <div className="animate-in fade-in duration-700">
