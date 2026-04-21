@@ -319,7 +319,7 @@ export default function Dashboard() {
   const isAnyModalOpen = !!drafts || isBudgetModalOpen;
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-app-bg">
       {alert && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
           <div
@@ -443,7 +443,7 @@ export default function Dashboard() {
 
       <main
         id="home"
-        className={`max-w-[1126px] mx-auto p-6 md:p-10 transition-all duration-300 ${
+        className={`flex-grow max-w-[1126px] w-full mx-auto p-6 md:p-10 transition-all duration-300 ${
           isAnyModalOpen ? "blur-md brightness-50" : ""
         }`}
       >
@@ -501,26 +501,12 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {!hasBudgetsSet ? (
-          <LockedSection
-            title="Dashboard Locked"
-            message="Set your monthly budget to unlock your metrics."
-          />
-        ) : !monzoDataFetched ? (
-          <div className="animate-in fade-in duration-700">
-            <LockedSection
-              id="transactions"
-              title="Dashbaord Locked"
-              message="Sync your Monzo account to fetch the latest data."
-            />
-          </div>
-        ) : (
+        {isFullyUnlocked && (
           <div className="animate-in fade-in duration-700">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8 items-stretch">
               <div className="lg:col-span-5 bg-[#141414] border border-[#262626] rounded-3xl shadow-xl flex flex-col overflow-hidden">
                 <TotalExpenses />
               </div>
-
               <section
                 id="transactions"
                 className="lg:col-span-7 bg-app-bg border border-[#222] rounded-3xl overflow-hidden shadow-2xl flex flex-col justify-between min-h-[600px]"
@@ -772,6 +758,6 @@ export default function Dashboard() {
           onConfirm={onConfirmSuccess}
         />
       )}
-    </>
+    </div>
   );
 }
