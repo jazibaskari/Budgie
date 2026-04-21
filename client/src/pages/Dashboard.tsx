@@ -329,11 +329,11 @@ export default function Dashboard() {
                 Simply click <span className="text-white font-bold">'Sync Monzo'</span> and authenticate with Monzo via <span className="text-white font-bold">e-mail</span>, then your <span className="text-white font-bold">mobile device</span>. In the background, your most recent transactions will be synced to your dashboard. Next, hit <span className="text-white font-bold">'Configure Budget'</span> to set your budget for this month. Complete the aforementioned steps to unlock your dashboard metrics, easily monitor your spending habits with the resulting inights, and filter your data however you'd like.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <button onClick={syncMonzoData} disabled={isSyncing} className="w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-bold hover:bg-emerald-400 transition-all">
+                <button onClick={syncMonzoData} disabled={isSyncing} className="w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-regular hover:bg-emerald-400 transition-all">
                   {isSyncing ? <RefreshCcw size={16} className="animate-spin" /> : (isAuthorized ? <CheckCircle size={16} /> : <RefreshCcw size={16} />)}
                   {isSyncing ? 'Syncing...' : (isAuthorized ? 'Monzo Synced' : 'Sync Monzo')}
                 </button>
-                <button onClick={() => setIsBudgetModalOpen(true)} className=" w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-medium hover:bg-[#222] transition-all">
+                <button onClick={() => setIsBudgetModalOpen(true)} className=" w-full sm:w-fit flex items-center justify-center gap-2 px-6 py-2.5 bg-[#161616] border border-[#222] text-white rounded-xl text-sm font-regular hover:bg-[#222] transition-all">
                   <PieChart size={16} />
                   Configure Budget
                 </button>
